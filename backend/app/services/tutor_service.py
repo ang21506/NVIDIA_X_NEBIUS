@@ -172,7 +172,7 @@ class TutorService:
                 transcript=mock_answer,
                 audio_url=None,
                 duration_seconds=5.0,
-                citations_json=json.dumps([c.dict() for c in citations]),
+                citations_json=json.dumps([c.model_dump() for c in citations]),
             )
             db.add(assistant_msg)
             db.commit()
@@ -228,7 +228,7 @@ Please generate the structured JSON response in your J.A.R.V.I.S. persona with b
                 transcript=answer,
                 audio_url=None,
                 duration_seconds=6.0,
-                citations_json=json.dumps([c.dict() for c in citations]),
+                citations_json=json.dumps([c.model_dump() for c in citations]),
             )
             db.add(assistant_msg)
             db.commit()
@@ -259,7 +259,7 @@ Please generate the structured JSON response in your J.A.R.V.I.S. persona with b
                 transcript=result["content"],
                 audio_url=None,
                 duration_seconds=5.0,
-                citations_json=json.dumps([c.dict() for c in citations]),
+                citations_json=json.dumps([c.model_dump() for c in citations]),
             )
             db.add(assistant_msg)
             db.commit()

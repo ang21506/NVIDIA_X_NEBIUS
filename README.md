@@ -26,6 +26,13 @@ LearnLoop AI introduces **Misconception Memory**. Instead of merely tallying tes
 - The targeted remediation or counter-example attempted.
 - Strict resolution rule: **A misconception is marked resolved ONLY upon a verifiable, correct follow-up assessment targeted at that exact concept.**
 
+### Audio Innovation: **Iron Man J.A.R.V.I.S. Voice AI Tutor**
+To transform studying into an interactive, hands-free experience:
+- **Audio In / Audio Out**: Takes real-time voice input from the student's microphone and replies in audio via speech synthesis with polite British J.A.R.V.I.S. cadence.
+- **Persistent Audio Session History**: Just like ChatGPT stores past text chats, LearnLoop stores past conversations in **audio format** with playable audio tracks, transcripts, and grounded course document citations.
+- **Arc Reactor HUD**: Features an interactive glowing Arc Reactor voice controller that pulses visually during listening and voice synthesis.
+
+
 ---
 
 ## 2. Architecture
@@ -106,7 +113,7 @@ A pre-seeded demonstration course, **Machine Learning Fundamentals (CS-401)**, i
 #### 1. Setup Backend
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/NVIDIA_X_NEBIUS.git
+git clone https://github.com/ang21506/NVIDIA_X_NEBIUS.git
 cd NVIDIA_X_NEBIUS
 
 # Create and activate Python 3.11 virtual environment
