@@ -24,8 +24,12 @@ __pycache__/
 .coverage
 htmlcov/
 
-# Database & Local Uploads
+# Database & Local Uploads / Audio
 *.db
 backend/data/*.db
 backend/data/uploads/*
 !backend/data/uploads/.gitkeep
+backend/data/audio/*
+!backend/data/audio/.gitkeep
+test_voice_api.py
+
