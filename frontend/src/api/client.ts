@@ -74,6 +74,7 @@ export interface TutorCitation {
 
 export interface TutorAnswer {
   answer: string;
+  speech_text?: string;
   key_takeaways: string[];
   examples: string[];
   citations: TutorCitation[];
@@ -82,6 +83,31 @@ export interface TutorAnswer {
   follow_up_questions: string[];
   model_used: string;
   latency_ms?: number;
+  conversation_id?: string;
+  message_id?: string;
+  user_audio_url?: string;
+  assistant_audio_url?: string;
+}
+
+export interface AudioMessage {
+  id: string;
+  conversation_id: string;
+  role: 'user' | 'assistant';
+  transcript: string;
+  audio_url?: string;
+  duration_seconds: number;
+  citations: TutorCitation[];
+  created_at: string;
+}
+
+export interface AudioConversation {
+  id: string;
+  course_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+  messages: AudioMessage[];
 }
 
 export interface QuizItem {
@@ -338,11 +364,34 @@ export const api = {
   },
 
   tutor: {
-    ask: (data: { course_id: string; question: string; topic_id?: string; allow_general_knowledge?: boolean }) =>
+    ask: (data: { course_id: string; question: string; topic_id?: string; allow_general_knowledge?: boolean; conversation_id?: string }) =>
       apiFetch<TutorAnswer>('/v1/tutor/ask', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    askVoice: async (courseId: string, transcript: string, audioBlob?: Blob, conversationId?: string) => {
+      const formData = new FormData();
+      formData.append('course_id', courseId);
+      formData.append('transcript', transcript);
+      if (conversationId) formData.append('conversation_id', conversationId);
+      if (audioBlob) formData.append('audio_file', audioBlob, 'voice_input.webm');
+      return apiFetch<TutorAnswer>('/v1/tutor/voice/ask', {
+        method: 'POST',
+        body: formData,
+      });
+    },
+    listVoiceConversations: (courseId?: string) =>
+      apiFetch<AudioConversation[]>(`/v1/tutor/voice/conversations${courseId ? `?course_id=${courseId}` : ''}`),
+    getVoiceConversation: (id: string) =>
+      apiFetch<AudioConversation>(`/v1/tutor/voice/conversations/${id}`),
+    saveAssistantAudio: async (messageId: string, audioBlob: Blob) => {
+      const formData = new FormData();
+      formData.append('audio_file', audioBlob, 'jarvis_response.webm');
+      return apiFetch<{ status: string; audio_url: string }>(`/v1/tutor/voice/messages/${messageId}/audio`, {
+        method: 'POST',
+        body: formData,
+      });
+    },
     getModels: () => apiFetch<{ is_configured: boolean; active_model: string; available_models: string[] }>('/v1/tutor/models'),
   },
 

@@ -34,6 +34,7 @@ class Settings(BaseSettings):
 
     # File uploads & storage
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./backend/data/uploads")
+    AUDIO_DIR: str = os.getenv("AUDIO_DIR", "./backend/data/audio")
     MAX_UPLOAD_SIZE_MB: int = 25
     CHUNK_SIZE: int = 450
     CHUNK_OVERLAP: int = 75
@@ -62,4 +63,5 @@ settings = Settings()
 
 # Ensure directories exist
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+os.makedirs(settings.AUDIO_DIR, exist_ok=True)
 os.makedirs("./backend/data", exist_ok=True)

@@ -7,6 +7,7 @@ from backend.app.models.assessment import QuizItem, QuizAttempt, QuizAnswer
 from backend.app.models.misconception import Misconception
 from backend.app.models.planner import StudyTask
 from backend.app.models.agent import AgentRun, ToolGrant
+from backend.app.models.audio_chat import AudioConversation, AudioMessage
 
 __all__ = [
     "Base",
@@ -24,4 +25,6 @@ __all__ = [
     "StudyTask",
     "AgentRun",
     "ToolGrant",
+    "AudioConversation",
+    "AudioMessage",
 ]

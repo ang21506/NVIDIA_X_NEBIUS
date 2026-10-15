@@ -112,6 +112,40 @@ def test_document_retrieval_and_citations(client):
     assert len(tutor_data["citations"]) > 0
     assert "lecture_4_metrics_imbalanced.txt" in tutor_data["citations"][0]["filename"]
 
+def test_jarvis_voice_audio_conversations(client):
+    demo_token = client.post("/v1/auth/demo-login").json()["access_token"]
+    headers = {"Authorization": f"Bearer {demo_token}"}
+
+    courses = client.get("/v1/courses", headers=headers).json()
+    ml_course = next(c for c in courses if c["code"] == "CS-401")
+
+    # Ask J.A.R.V.I.S. via voice endpoint
+    voice_resp = client.post(
+        "/v1/tutor/voice/ask",
+        headers=headers,
+        data={
+            "course_id": ml_course["id"],
+            "transcript": "J.A.R.V.I.S., analyze false positives versus false negatives in disease diagnosis.",
+        }
+    )
+    assert voice_resp.status_code == 200
+    voice_data = voice_resp.json()
+    assert "speech_text" in voice_data
+    assert voice_data["conversation_id"] is not None
+
+    # Retrieve conversation history
+    conv_id = voice_data["conversation_id"]
+    convs_resp = client.get(f"/v1/tutor/voice/conversations?course_id={ml_course['id']}", headers=headers)
+    assert convs_resp.status_code == 200
+    convs = convs_resp.json()
+    assert len(convs) >= 1
+
+    # Retrieve detailed conversation with audio messages
+    detail_resp = client.get(f"/v1/tutor/voice/conversations/{conv_id}", headers=headers)
+    assert detail_resp.status_code == 200
+    detail = detail_resp.json()
+    assert detail["message_count"] >= 2  # user audio message + assistant speech message
+
 def test_misconception_lifecycle_and_study_planner(client):
     demo_token = client.post("/v1/auth/demo-login").json()["access_token"]
     headers = {"Authorization": f"Bearer {demo_token}"}
