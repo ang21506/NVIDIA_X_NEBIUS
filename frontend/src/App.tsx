@@ -1,19 +1,64 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { Layout } from './components/Layout';
-import { LandingPage } from './pages/LandingPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { CoursesPage } from './pages/CoursesPage';
-import { ResourcesPage } from './pages/ResourcesPage';
-import { TutorPage } from './pages/TutorPage';
-import { QuizPage } from './pages/QuizPage';
-import { LearningMemoryPage } from './pages/LearningMemoryPage';
-import { StudyPlannerPage } from './pages/StudyPlannerPage';
-import { AgentActivityPage } from './pages/AgentActivityPage';
-import { SettingsPage } from './pages/SettingsPage';
+import React, { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Layout } from "./components/Layout";
+import { LandingPage } from "./pages/LandingPage";
+const DashboardPage = lazy(() =>
+  import("./pages/DashboardPage").then((module) => ({
+    default: module.DashboardPage,
+  })),
+);
+const CoursesPage = lazy(() =>
+  import("./pages/CoursesPage").then((module) => ({
+    default: module.CoursesPage,
+  })),
+);
+const ResourcesPage = lazy(() =>
+  import("./pages/ResourcesPage").then((module) => ({
+    default: module.ResourcesPage,
+  })),
+);
+const TutorPage = lazy(() =>
+  import("./pages/TutorPage").then((module) => ({ default: module.TutorPage })),
+);
+const QuizPage = lazy(() =>
+  import("./pages/QuizPage").then((module) => ({ default: module.QuizPage })),
+);
+const LearningMemoryPage = lazy(() =>
+  import("./pages/LearningMemoryPage").then((module) => ({
+    default: module.LearningMemoryPage,
+  })),
+);
+const StudyPlannerPage = lazy(() =>
+  import("./pages/StudyPlannerPage").then((module) => ({
+    default: module.StudyPlannerPage,
+  })),
+);
+const AgentActivityPage = lazy(() =>
+  import("./pages/AgentActivityPage").then((module) => ({
+    default: module.AgentActivityPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import("./pages/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
+import { ThemeProvider } from "./context/ThemeContext";
+const AnalyticsPage = lazy(() =>
+  import("./pages/AnalyticsPage").then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+);
+const OnboardingPage = lazy(() =>
+  import("./pages/OnboardingPage").then((module) => ({
+    default: module.OnboardingPage,
+  })),
+);
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -44,32 +89,44 @@ const PublicHomeRoute: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<PublicHomeRoute />} />
-
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense
+            fallback={
+              <div className="loading-state" role="status">
+                Loading workspace…
+              </div>
             }
           >
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/courses" element={<CoursesPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/tutor" element={<TutorPage />} />
-            <Route path="/quizzes" element={<QuizPage />} />
-            <Route path="/memory" element={<LearningMemoryPage />} />
-            <Route path="/planner" element={<StudyPlannerPage />} />
-            <Route path="/agent-activity" element={<AgentActivityPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Route>
+            <Routes>
+              <Route path="/" element={<PublicHomeRoute />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/resources" element={<ResourcesPage />} />
+                <Route path="/tutor" element={<TutorPage />} />
+                <Route path="/quizzes" element={<QuizPage />} />
+                <Route path="/memory" element={<LearningMemoryPage />} />
+                <Route path="/planner" element={<StudyPlannerPage />} />
+                <Route path="/agent-activity" element={<AgentActivityPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/onboarding" element={<OnboardingPage />} />
+              </Route>
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

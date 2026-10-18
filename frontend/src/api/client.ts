@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+import { DEMO_TOKEN, demoRequest } from "./demo";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 export interface User {
   id: string;
@@ -57,7 +58,7 @@ export interface ResourceItem {
   file_size: number;
   mime_type: string;
   page_count: number;
-  status: 'UPLOADED' | 'PROCESSING' | 'INDEXED' | 'FAILED';
+  status: "UPLOADED" | "PROCESSING" | "INDEXED" | "FAILED";
   error_message?: string;
   created_at: string;
   updated_at: string;
@@ -92,7 +93,7 @@ export interface TutorAnswer {
 export interface AudioMessage {
   id: string;
   conversation_id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   transcript: string;
   audio_url?: string;
   duration_seconds: number;
@@ -159,7 +160,7 @@ export interface Misconception {
   expected_concept: string;
   confidence: number;
   remediation_provided?: string;
-  status: 'NEWLY_DETECTED' | 'NEEDS_REMEDIATION' | 'NEEDS_RETEST' | 'RESOLVED';
+  status: "NEWLY_DETECTED" | "NEEDS_REMEDIATION" | "NEEDS_RETEST" | "RESOLVED";
   next_review_at?: string;
   attempt_count: number;
   last_assessed_outcome: string;
@@ -206,7 +207,7 @@ export interface StudyTask {
   estimated_minutes: number;
   priority_score: number;
   reason_codes: string[];
-  status: 'RECOMMENDED' | 'IN_PROGRESS' | 'COMPLETED' | 'RESCHEDULED';
+  status: "RECOMMENDED" | "IN_PROGRESS" | "COMPLETED" | "RESCHEDULED";
   completion_evidence?: string;
   completed_at?: string;
   created_at: string;
@@ -247,7 +248,7 @@ export interface ToolGrant {
 }
 
 // Token management
-const TOKEN_KEY = 'learnloop_access_token';
+const TOKEN_KEY = "learnloop_access_token";
 
 export const authStorage = {
   getToken: () => localStorage.getItem(TOKEN_KEY),
@@ -255,15 +256,19 @@ export const authStorage = {
   clearToken: () => localStorage.removeItem(TOKEN_KEY),
 };
 
-async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
   const token = authStorage.getToken();
+  if (token === DEMO_TOKEN) return demoRequest(endpoint, options) as Promise<T>;
   const headers = new Headers(options.headers || {});
 
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
+  if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
   }
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   const url = `${API_BASE}${endpoint}`;
@@ -296,175 +301,253 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 export const api = {
   auth: {
     login: (credentials: { email: string; password: string }) =>
-      apiFetch<AuthResponse>('/v1/auth/login', {
-        method: 'POST',
+      apiFetch<AuthResponse>("/v1/auth/login", {
+        method: "POST",
         body: JSON.stringify(credentials),
       }),
-    register: (userData: { email: string; password: string; full_name: string; timezone?: string }) =>
-      apiFetch<AuthResponse>('/v1/auth/register', {
-        method: 'POST',
+    register: (userData: {
+      email: string;
+      password: string;
+      full_name: string;
+      timezone?: string;
+    }) =>
+      apiFetch<AuthResponse>("/v1/auth/register", {
+        method: "POST",
         body: JSON.stringify(userData),
       }),
     demoLogin: () =>
-      apiFetch<AuthResponse>('/v1/auth/demo-login', {
-        method: 'POST',
+      apiFetch<AuthResponse>("/v1/auth/demo-login", {
+        method: "POST",
       }),
-    getMe: () => apiFetch<User>('/v1/auth/me'),
+    getMe: () => apiFetch<User>("/v1/auth/me"),
     updateProfile: (data: { full_name?: string; timezone?: string }) =>
-      apiFetch<User>('/v1/auth/profile', {
-        method: 'PATCH',
+      apiFetch<User>("/v1/auth/profile", {
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
   },
 
   courses: {
-    list: () => apiFetch<Course[]>('/v1/courses'),
+    list: () => apiFetch<Course[]>("/v1/courses"),
     get: (id: string) => apiFetch<CourseDetail>(`/v1/courses/${id}`),
     create: (data: Partial<Course>) =>
-      apiFetch<Course>('/v1/courses', {
-        method: 'POST',
+      apiFetch<Course>("/v1/courses", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     update: (id: string, data: Partial<Course>) =>
       apiFetch<Course>(`/v1/courses/${id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
       apiFetch<void>(`/v1/courses/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
   },
 
   resources: {
-    listByCourse: (courseId: string) => apiFetch<ResourceItem[]>(`/v1/courses/${courseId}/resources`),
+    listByCourse: (courseId: string) =>
+      apiFetch<ResourceItem[]>(`/v1/courses/${courseId}/resources`),
     get: (id: string) => apiFetch<ResourceItem>(`/v1/resources/${id}`),
     upload: async (courseId: string, file: File) => {
       const formData = new FormData();
-      formData.append('course_id', courseId);
-      formData.append('file', file);
-      return apiFetch<ResourceItem>('/v1/resources/upload', {
-        method: 'POST',
+      formData.append("course_id", courseId);
+      formData.append("file", file);
+      return apiFetch<ResourceItem>("/v1/resources/upload", {
+        method: "POST",
         body: formData,
       });
     },
     delete: (id: string) =>
       apiFetch<void>(`/v1/resources/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
   },
 
   topics: {
-    listByCourse: (courseId: string) => apiFetch<Topic[]>(`/v1/courses/${courseId}/topics`),
-    create: (courseId: string, data: { title: string; description?: string; order_index?: number; prerequisites?: string[] }) =>
+    listByCourse: (courseId: string) =>
+      apiFetch<Topic[]>(`/v1/courses/${courseId}/topics`),
+    create: (
+      courseId: string,
+      data: {
+        title: string;
+        description?: string;
+        order_index?: number;
+        prerequisites?: string[];
+      },
+    ) =>
       apiFetch<Topic>(`/v1/courses/${courseId}/topics`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(data),
       }),
   },
 
   tutor: {
-    ask: (data: { course_id: string; question: string; topic_id?: string; allow_general_knowledge?: boolean; conversation_id?: string }) =>
-      apiFetch<TutorAnswer>('/v1/tutor/ask', {
-        method: 'POST',
+    ask: (data: {
+      course_id: string;
+      question: string;
+      topic_id?: string;
+      allow_general_knowledge?: boolean;
+      conversation_id?: string;
+    }) =>
+      apiFetch<TutorAnswer>("/v1/tutor/ask", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
-    askVoice: async (courseId: string, transcript: string, audioBlob?: Blob, conversationId?: string) => {
+    askVoice: async (
+      courseId: string,
+      transcript: string,
+      audioBlob?: Blob,
+      conversationId?: string,
+    ) => {
       const formData = new FormData();
-      formData.append('course_id', courseId);
-      formData.append('transcript', transcript);
-      if (conversationId) formData.append('conversation_id', conversationId);
-      if (audioBlob) formData.append('audio_file', audioBlob, 'voice_input.webm');
-      return apiFetch<TutorAnswer>('/v1/tutor/voice/ask', {
-        method: 'POST',
+      formData.append("course_id", courseId);
+      formData.append("transcript", transcript);
+      if (conversationId) formData.append("conversation_id", conversationId);
+      if (audioBlob)
+        formData.append("audio_file", audioBlob, "voice_input.webm");
+      return apiFetch<TutorAnswer>("/v1/tutor/voice/ask", {
+        method: "POST",
         body: formData,
       });
     },
     listVoiceConversations: (courseId?: string) =>
-      apiFetch<AudioConversation[]>(`/v1/tutor/voice/conversations${courseId ? `?course_id=${courseId}` : ''}`),
+      apiFetch<AudioConversation[]>(
+        `/v1/tutor/voice/conversations${courseId ? `?course_id=${courseId}` : ""}`,
+      ),
     getVoiceConversation: (id: string) =>
       apiFetch<AudioConversation>(`/v1/tutor/voice/conversations/${id}`),
     saveAssistantAudio: async (messageId: string, audioBlob: Blob) => {
       const formData = new FormData();
-      formData.append('audio_file', audioBlob, 'jarvis_response.webm');
-      return apiFetch<{ status: string; audio_url: string }>(`/v1/tutor/voice/messages/${messageId}/audio`, {
-        method: 'POST',
-        body: formData,
-      });
+      formData.append("audio_file", audioBlob, "jarvis_response.webm");
+      return apiFetch<{ status: string; audio_url: string }>(
+        `/v1/tutor/voice/messages/${messageId}/audio`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
     },
-    getModels: () => apiFetch<{ is_configured: boolean; active_model: string; available_models: string[] }>('/v1/tutor/models'),
+    getModels: () =>
+      apiFetch<{
+        is_configured: boolean;
+        active_model: string;
+        available_models: string[];
+      }>("/v1/tutor/models"),
   },
 
   quizzes: {
-    generate: (data: { course_id: string; topic_ids?: string[]; num_questions?: number; difficulty?: string }) =>
-      apiFetch<QuizItem[]>('/v1/quizzes/generate', {
-        method: 'POST',
+    generate: (data: {
+      course_id: string;
+      topic_ids?: string[];
+      num_questions?: number;
+      difficulty?: string;
+    }) =>
+      apiFetch<QuizItem[]>("/v1/quizzes/generate", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
-    submit: (data: { course_id: string; answers: Array<{ quiz_item_id: string; selected_answer: string }> }) =>
-      apiFetch<QuizResultResponse>('/v1/quizzes/submit', {
-        method: 'POST',
+    submit: (data: {
+      course_id: string;
+      answers: Array<{ quiz_item_id: string; selected_answer: string }>;
+    }) =>
+      apiFetch<QuizResultResponse>("/v1/quizzes/submit", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
-    getResults: (attemptId: string) => apiFetch<QuizResultResponse>(`/v1/quizzes/${attemptId}/results`),
+    getResults: (attemptId: string) =>
+      apiFetch<QuizResultResponse>(`/v1/quizzes/${attemptId}/results`),
   },
 
   memory: {
     getSummary: (courseId?: string) =>
-      apiFetch<MemorySummary>(`/v1/memory${courseId ? `?course_id=${courseId}` : ''}`),
+      apiFetch<MemorySummary>(
+        `/v1/memory${courseId ? `?course_id=${courseId}` : ""}`,
+      ),
     getMisconceptions: (courseId?: string, status?: string) => {
       const params = new URLSearchParams();
-      if (courseId) params.append('course_id', courseId);
-      if (status) params.append('status', status);
-      return apiFetch<Misconception[]>(`/v1/memory/misconceptions?${params.toString()}`);
+      if (courseId) params.append("course_id", courseId);
+      if (status) params.append("status", status);
+      return apiFetch<Misconception[]>(
+        `/v1/memory/misconceptions?${params.toString()}`,
+      );
     },
     getMastery: (courseId?: string) =>
-      apiFetch<MasteryItem[]>(`/v1/memory/mastery${courseId ? `?course_id=${courseId}` : ''}`),
+      apiFetch<MasteryItem[]>(
+        `/v1/memory/mastery${courseId ? `?course_id=${courseId}` : ""}`,
+      ),
   },
 
   planner: {
     getPlan: (courseId?: string) =>
-      apiFetch<StudyPlan>(`/v1/study-plans${courseId ? `?course_id=${courseId}` : ''}`),
+      apiFetch<StudyPlan>(
+        `/v1/study-plans${courseId ? `?course_id=${courseId}` : ""}`,
+      ),
     recalculate: (courseId: string) =>
-      apiFetch<StudyPlan>('/v1/study-plans/recalculate', {
-        method: 'POST',
+      apiFetch<StudyPlan>("/v1/study-plans/recalculate", {
+        method: "POST",
         body: JSON.stringify({ course_id: courseId }),
       }),
-    updateTask: (taskId: string, data: { status?: string; due_date?: string; completion_evidence?: string }) =>
+    updateTask: (
+      taskId: string,
+      data: {
+        status?: string;
+        due_date?: string;
+        completion_evidence?: string;
+      },
+    ) =>
       apiFetch<StudyTask>(`/v1/study-tasks/${taskId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
   },
 
   agent: {
-    triggerRun: (data: { goal: string; skill_name: string; course_id?: string; params?: Record<string, any> }) =>
-      apiFetch<AgentRun>('/v1/agent-runs', {
-        method: 'POST',
+    triggerRun: (data: {
+      goal: string;
+      skill_name: string;
+      course_id?: string;
+      params?: Record<string, any>;
+    }) =>
+      apiFetch<AgentRun>("/v1/agent-runs", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     listRuns: (courseId?: string, skill?: string, status?: string) => {
       const params = new URLSearchParams();
-      if (courseId) params.append('course_id', courseId);
-      if (skill) params.append('skill', skill);
-      if (status) params.append('status', status);
+      if (courseId) params.append("course_id", courseId);
+      if (skill) params.append("skill", skill);
+      if (status) params.append("status", status);
       return apiFetch<AgentRun[]>(`/v1/agent-runs?${params.toString()}`);
     },
     getRun: (id: string) => apiFetch<AgentRun>(`/v1/agent-runs/${id}`),
-    listGrants: () => apiFetch<ToolGrant[]>('/v1/agent/grants'),
+    listGrants: () => apiFetch<ToolGrant[]>("/v1/agent/grants"),
     toggleGrant: (tool_name: string, is_granted: boolean) =>
-      apiFetch<ToolGrant>('/v1/agent/grants', {
-        method: 'POST',
+      apiFetch<ToolGrant>("/v1/agent/grants", {
+        method: "POST",
         body: JSON.stringify({ tool_name, is_granted }),
       }),
   },
 
   settings: {
-    getPrivacy: () => apiFetch<any>('/v1/settings/privacy'),
-    exportData: () => apiFetch<any>('/v1/settings/export', { method: 'POST' }),
-    deleteData: () => apiFetch<{ message: string }>('/v1/settings/data', { method: 'DELETE' }),
-    resetDemo: () => apiFetch<{ message: string }>('/v1/settings/reset-demo', { method: 'POST' }),
+    getPrivacy: () => apiFetch<any>("/v1/settings/privacy"),
+    exportData: () => apiFetch<any>("/v1/settings/export", { method: "POST" }),
+    deleteData: () =>
+      apiFetch<{ message: string }>("/v1/settings/data", { method: "DELETE" }),
+    resetDemo: () =>
+      apiFetch<{ message: string }>("/v1/settings/reset-demo", {
+        method: "POST",
+      }),
   },
 
-  health: () => apiFetch<{ status: string; app: string; version: string; database_connected: boolean; nebius_configured: boolean; model: string }>('/health'),
+  health: () =>
+    apiFetch<{
+      status: string;
+      app: string;
+      version: string;
+      database_connected: boolean;
+      nebius_configured: boolean;
+      model: string;
+    }>("/health"),
 };
