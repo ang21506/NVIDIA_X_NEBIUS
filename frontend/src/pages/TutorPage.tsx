@@ -26,6 +26,8 @@ import { DEMO_TOKEN } from "../api/demo";
 import { useAuth } from "../context/AuthContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { PageHeader, EmptyState } from "../components/ui";
+import jarvisCoreImg from "../assets/jarvis-core-glow.png";
+
 export function TutorPage() {
   const { activeCourseId } = useAuth();
   const [conversations, setConversations] = useState<AudioConversation[]>([]);
@@ -224,7 +226,22 @@ export function TutorPage() {
         </aside>
         <section className="tutor-conversation">
           <div className="tutor-status">
-            <span className="status-dot" />
+            {busy ? (
+              <img
+                src={jarvisCoreImg}
+                alt="JARVIS Active"
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  filter: "drop-shadow(0 0 6px #34d399)",
+                  animation: "jarvis-spin 3s linear infinite",
+                }}
+              />
+            ) : (
+              <span className="status-dot" />
+            )}
             <strong>JARVIS</strong>
             <small>{local ? "Local example · no AI inference" : model}</small>
           </div>
@@ -303,9 +320,39 @@ export function TutorPage() {
               </EmptyState>
             )}
             {busy && (
-              <p role="status" className="body-copy">
-                JARVIS is preparing a response…
-              </p>
+              <div className="jarvis-thinking-container" role="status" aria-live="polite">
+                <div className="jarvis-core-wrapper">
+                  <div className="jarvis-core-rings">
+                    <div className="jarvis-ring outer-ring" />
+                    <div className="jarvis-ring middle-ring" />
+                    <div className="jarvis-ring inner-pulse" />
+                  </div>
+                  <div className="jarvis-core-image-holder">
+                    <img
+                      src={jarvisCoreImg}
+                      alt="JARVIS Neural Core Active"
+                      className="jarvis-core-image"
+                    />
+                    <div className="jarvis-core-scanner" />
+                  </div>
+                </div>
+                <div className="jarvis-thinking-meta">
+                  <div className="jarvis-thinking-header">
+                    <span className="jarvis-pulse-dot" />
+                    <strong className="jarvis-thinking-title">JARVIS NEURAL CORE ACTIVE</strong>
+                  </div>
+                  <p className="jarvis-thinking-text">
+                    Synthesizing course lecture notes & reasoning with NVIDIA Nemotron…
+                  </p>
+                  <div className="jarvis-wave-bars">
+                    <span className="wave-bar" />
+                    <span className="wave-bar" />
+                    <span className="wave-bar" />
+                    <span className="wave-bar" />
+                    <span className="wave-bar" />
+                  </div>
+                </div>
+              </div>
             )}
             <div ref={end} />
           </div>

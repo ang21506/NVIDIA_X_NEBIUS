@@ -2360,3 +2360,228 @@ button.bg-cyan-600 {
     width: 100%;
   }
 }
+
+/* ========================================================
+   J.A.R.V.I.S. Neural Core Thinking Indicator & Animations
+   ======================================================== */
+.jarvis-thinking-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 22px;
+  margin: 16px 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.22) 0%, rgba(2, 6, 23, 0.75) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.15), inset 0 0 20px rgba(5, 150, 105, 0.08);
+  backdrop-filter: blur(8px);
+  animation: jarvis-container-fadein 0.4s ease-out;
+}
+
+@keyframes jarvis-container-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jarvis-core-wrapper {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jarvis-core-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.jarvis-ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.jarvis-ring.outer-ring {
+  inset: 0;
+  border: 1.5px dashed rgba(52, 211, 153, 0.6);
+  animation: jarvis-counter-spin 12s linear infinite;
+}
+
+.jarvis-ring.middle-ring {
+  inset: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-top-color: rgba(110, 231, 183, 0.95);
+  border-bottom-color: rgba(5, 150, 105, 0.9);
+  animation: jarvis-spin 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.jarvis-ring.inner-pulse {
+  inset: 12px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
+  animation: jarvis-pulse-glow 1.8s ease-in-out infinite alternate;
+}
+
+.jarvis-core-image-holder {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.5);
+}
+
+.jarvis-core-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.9));
+  animation: jarvis-spin 8s linear infinite, jarvis-core-breathe 2.5s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+.jarvis-core-scanner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(167, 243, 208, 0.95) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(110, 231, 183, 1);
+  animation: jarvis-scan-line 2s ease-in-out infinite alternate;
+}
+
+@keyframes jarvis-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes jarvis-counter-spin {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes jarvis-core-breathe {
+  0% {
+    transform: scale(0.94);
+    filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.7));
+  }
+  100% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 0 16px rgba(74, 222, 128, 1));
+  }
+}
+
+@keyframes jarvis-pulse-glow {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0.95;
+  }
+}
+
+@keyframes jarvis-scan-line {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.2;
+  }
+}
+
+.jarvis-thinking-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.jarvis-thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jarvis-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+  animation: jarvis-pulse-glow 1s infinite alternate;
+}
+
+.jarvis-thinking-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #6ee7b7;
+  text-transform: uppercase;
+}
+
+.jarvis-thinking-text {
+  font-size: 13px;
+  color: #e2e8f0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.jarvis-wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  height: 16px;
+}
+
+.wave-bar {
+  width: 3px;
+  background: #34d399;
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
+  animation: jarvis-wave-dance 1.2s ease-in-out infinite alternate;
+}
+
+.wave-bar:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+.wave-bar:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+.wave-bar:nth-child(3) { height: 9px; animation-delay: 0.15s; }
+.wave-bar:nth-child(4) { height: 16px; animation-delay: 0.45s; }
+.wave-bar:nth-child(5) { height: 8px; animation-delay: 0.25s; }
+
+@keyframes jarvis-wave-dance {
+  0% {
+    transform: scaleY(0.3);
+  }
+  100% {
+    transform: scaleY(1.3);
+  }
+}
+
