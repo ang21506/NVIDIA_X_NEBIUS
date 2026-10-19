@@ -353,9 +353,9 @@ export function TutorPage() {
                   </div>
                   <div className="jarvis-core-image-holder">
                     <img
-                      src={jarvisCoreImg}
+                      src="/jarvis-core-cropped.png"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/jarvis-core.png";
+                        (e.target as HTMLImageElement).src = jarvisCoreImg;
                       }}
                       alt="JARVIS Neural Core Active"
                       className="jarvis-core-image"

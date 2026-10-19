@@ -2368,13 +2368,12 @@ button.bg-cyan-600 {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 16px 22px;
+  padding: 18px 24px;
   margin: 16px 0;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(6, 78, 59, 0.22) 0%, rgba(2, 6, 23, 0.75) 100%);
-  border: 1px solid rgba(52, 211, 153, 0.35);
-  box-shadow: 0 0 30px rgba(16, 185, 129, 0.15), inset 0 0 20px rgba(5, 150, 105, 0.08);
-  backdrop-filter: blur(8px);
+  background: #ffffff;
+  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15), 0 0 25px rgba(16, 185, 129, 0.25);
   animation: jarvis-container-fadein 0.4s ease-out;
 }
 
@@ -2391,12 +2390,14 @@ button.bg-cyan-600 {
 
 .jarvis-core-wrapper {
   position: relative;
-  width: 92px;
-  height: 92px;
+  width: 94px;
+  height: 94px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #ffffff;
+  border-radius: 50%;
 }
 
 .jarvis-core-rings {
@@ -2413,34 +2414,35 @@ button.bg-cyan-600 {
 
 .jarvis-ring.outer-ring {
   inset: 0;
-  border: 1.5px dashed rgba(52, 211, 153, 0.6);
+  border: 1.5px dashed rgba(5, 150, 105, 0.65);
   animation: jarvis-counter-spin 12s linear infinite;
 }
 
 .jarvis-ring.middle-ring {
-  inset: 6px;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  border-top-color: rgba(110, 231, 183, 0.95);
-  border-bottom-color: rgba(5, 150, 105, 0.9);
+  inset: 5px;
+  border: 1.5px solid rgba(16, 185, 129, 0.45);
+  border-top-color: #059669;
+  border-bottom-color: #10b981;
   animation: jarvis-spin 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .jarvis-ring.inner-pulse {
-  inset: 12px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
+  inset: 10px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.18) 0%, rgba(255, 255, 255, 0.9) 70%);
   animation: jarvis-pulse-glow 1.8s ease-in-out infinite alternate;
 }
 
 .jarvis-core-image-holder {
   position: relative;
-  width: 74px;
-  height: 74px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.5);
+  background: #ffffff;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
 }
 
 .jarvis-core-image {
@@ -2448,7 +2450,7 @@ button.bg-cyan-600 {
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
-  filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.9));
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.7));
   animation: jarvis-spin 8s linear infinite, jarvis-core-breathe 2.5s ease-in-out infinite alternate;
   transform-origin: center center;
   display: block;
@@ -2459,8 +2461,8 @@ button.bg-cyan-600 {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, rgba(167, 243, 208, 0.95) 50%, transparent 100%);
-  box-shadow: 0 0 8px rgba(110, 231, 183, 1);
+  background: linear-gradient(90deg, transparent 0%, rgba(5, 150, 105, 0.95) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.9);
   animation: jarvis-scan-line 2s ease-in-out infinite alternate;
 }
 
@@ -2484,23 +2486,23 @@ button.bg-cyan-600 {
 
 @keyframes jarvis-core-breathe {
   0% {
-    transform: scale(0.94);
-    filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.7));
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 4px rgba(5, 150, 105, 0.6));
   }
   100% {
-    transform: scale(1.06);
-    filter: drop-shadow(0 0 16px rgba(74, 222, 128, 1));
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.9));
   }
 }
 
 @keyframes jarvis-pulse-glow {
   0% {
-    transform: scale(0.85);
-    opacity: 0.5;
+    transform: scale(0.88);
+    opacity: 0.6;
   }
   100% {
-    transform: scale(1.15);
-    opacity: 0.95;
+    transform: scale(1.12);
+    opacity: 1;
   }
 }
 
@@ -2536,8 +2538,8 @@ button.bg-cyan-600 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 10px #34d399;
+  background: #059669;
+  box-shadow: 0 0 8px #059669;
   animation: jarvis-pulse-glow 1s infinite alternate;
 }
 
@@ -2545,13 +2547,14 @@ button.bg-cyan-600 {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.5px;
-  color: #6ee7b7;
+  color: #047857;
   text-transform: uppercase;
 }
 
 .jarvis-thinking-text {
-  font-size: 13px;
-  color: #e2e8f0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #0f172a;
   margin: 0;
   line-height: 1.4;
 }
@@ -2566,9 +2569,9 @@ button.bg-cyan-600 {
 
 .wave-bar {
   width: 3px;
-  background: #34d399;
+  background: #059669;
   border-radius: 2px;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
+  box-shadow: 0 0 4px rgba(5, 150, 105, 0.6);
   animation: jarvis-wave-dance 1.2s ease-in-out infinite alternate;
 }
 
