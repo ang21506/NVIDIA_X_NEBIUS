@@ -19,11 +19,11 @@ class Settings(BaseSettings):
     # Nebius Token Factory / NVIDIA Nemotron
     NEBIUS_API_KEY: str = os.getenv("NEBIUS_API_KEY", "")
     NEBIUS_BASE_URL: str = os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1/")
-    NEBIUS_MODEL_ID: str = os.getenv("NEBIUS_MODEL_ID", "nvidia/nemotron-3-nano-30b-a3b")
+    NEBIUS_MODEL_ID: str = os.getenv("NEBIUS_MODEL_ID", "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF")
     NEBIUS_FALLBACK_MODELS: List[str] = [
+        "nvidia/nemotron-4-340b-instruct",
+        "nvidia/nemotron-3-nano-30b-a3b",
         "nvidia/Nemotron-3_5-Lightning",
-        "nvidia/nemotron-3-super-120b-a12b",
-        "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
         "meta-llama/Meta-Llama-3.1-8B-Instruct"
     ]
 
