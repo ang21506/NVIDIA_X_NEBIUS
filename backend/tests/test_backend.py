@@ -229,6 +229,12 @@ def test_misconception_lifecycle_and_study_planner(client):
     resolved_misc = [m for m in mem_after_resp.json() if m["status"] == "RESOLVED"]
     assert len(resolved_misc) >= 1
 
+    # Verify quiz attempts listing endpoint for analytics
+    attempts_resp = client.get(f"/v1/quizzes/attempts?course_id={ml_course['id']}", headers=headers)
+    assert attempts_resp.status_code == 200
+    attempts_list = attempts_resp.json()
+    assert len(attempts_list) >= 2  # initial misconception attempt + resolution attempt
+
 def test_agent_orchestrator_and_grants(client):
     demo_token = client.post("/v1/auth/demo-login").json()["access_token"]
     headers = {"Authorization": f"Bearer {demo_token}"}

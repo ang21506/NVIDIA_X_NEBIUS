@@ -1,6 +1,6 @@
 import json
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from backend.app.database import get_db
 from backend.app.models.user import User
@@ -12,6 +12,7 @@ from backend.app.schemas.quiz import (
     QuizSubmitRequest,
     QuizResultResponse,
     QuizAnswerResult,
+    QuizAttemptResponse,
 )
 from backend.app.api.deps import get_current_user
 from backend.app.services.quiz_service import QuizService
@@ -112,3 +113,26 @@ def get_quiz_results(
         updated_mastery={},
         planner_updated=False,
     )
+
+@router.get("/attempts", response_model=List[QuizAttemptResponse])
+def list_quiz_attempts(
+    course_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    query = db.query(QuizAttempt).filter(QuizAttempt.user_id == current_user.id)
+    if course_id:
+        query = query.filter(QuizAttempt.course_id == course_id)
+    attempts = query.order_by(QuizAttempt.created_at.asc()).all()
+    return [
+        QuizAttemptResponse(
+            id=a.id,
+            course_id=a.course_id,
+            total_items=a.total_items,
+            correct_items=a.correct_items,
+            score_percentage=a.score_percentage,
+            created_at=a.created_at.isoformat() if a.created_at else None,
+        )
+        for a in attempts
+    ]
+

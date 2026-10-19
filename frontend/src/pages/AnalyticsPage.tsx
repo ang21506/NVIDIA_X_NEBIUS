@@ -4,6 +4,7 @@ import {
   authStorage,
   type MasteryItem,
   type StudyTask,
+  type QuizAttemptItem,
 } from "../api/client";
 import { DEMO_TOKEN, readDemo } from "../api/demo";
 import { useAuth } from "../context/AuthContext";
@@ -23,6 +24,7 @@ export function AnalyticsPage() {
     mastery: MasteryItem[];
     tasks: StudyTask[];
   } | null>(null);
+  const [attempts, setAttempts] = useState<QuizAttemptItem[]>([]);
   const [error, setError] = useState("");
   useEffect(() => {
     let alive = true;
@@ -30,9 +32,29 @@ export function AnalyticsPage() {
     Promise.all([
       api.memory.getMastery(activeCourseId),
       api.planner.getPlan(activeCourseId),
+      api.quizzes.listAttempts(activeCourseId).catch(() => []),
     ])
-      .then(([mastery, plan]) => {
-        if (alive) setData({ mastery, tasks: plan.tasks });
+      .then(([mastery, plan, quizAttempts]) => {
+        if (!alive) return;
+        setData({ mastery, tasks: plan.tasks });
+        if (quizAttempts && quizAttempts.length > 0) {
+          setAttempts(quizAttempts);
+        } else if (authStorage.getToken() === DEMO_TOKEN) {
+          setAttempts(
+            readDemo()
+              .attempts.filter((a) => a.course_id === activeCourseId)
+              .map((a) => ({
+                id: a.attempt_id,
+                course_id: a.course_id,
+                total_items: a.total_items,
+                correct_items: a.correct_items,
+                score_percentage: a.score_percentage,
+                created_at: a.created_at,
+              })),
+          );
+        } else {
+          setAttempts([]);
+        }
       })
       .catch((e) => {
         if (alive) setError(e.message);
@@ -41,13 +63,10 @@ export function AnalyticsPage() {
       alive = false;
     };
   }, [activeCourseId]);
-  const attempts =
-    authStorage.getToken() === DEMO_TOKEN
-      ? readDemo().attempts.filter((a) => a.course_id === activeCourseId)
-      : [];
+
   const chart = attempts.map((a, i) => ({
     session: `#${i + 1}`,
-    accuracy: a.score_percentage,
+    accuracy: Math.round(a.score_percentage),
   }));
   const total = data?.mastery.reduce((n, m) => n + m.total_count, 0) || 0;
   const correct = data?.mastery.reduce((n, m) => n + m.correct_count, 0) || 0;
@@ -155,9 +174,7 @@ export function AnalyticsPage() {
               to="/quizzes"
               label="Open practice"
             >
-              {authStorage.getToken() === DEMO_TOKEN
-                ? "Complete your first practice session to see a trend."
-                : "The connected API does not expose attempt history. Current totals are shown without inventing a trend."}
+              Complete your first practice quiz to see your session-by-session accuracy trend.
             </EmptyState>
           )}
         </Panel>

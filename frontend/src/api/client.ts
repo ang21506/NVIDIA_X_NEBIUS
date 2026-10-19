@@ -147,6 +147,15 @@ export interface QuizResultResponse {
   planner_updated: boolean;
 }
 
+export interface QuizAttemptItem {
+  id: string;
+  course_id: string;
+  total_items: number;
+  correct_items: number;
+  score_percentage: number;
+  created_at?: string;
+}
+
 export interface Misconception {
   id: string;
   user_id: string;
@@ -458,6 +467,10 @@ export const api = {
       }),
     getResults: (attemptId: string) =>
       apiFetch<QuizResultResponse>(`/v1/quizzes/${attemptId}/results`),
+    listAttempts: (courseId?: string) =>
+      apiFetch<QuizAttemptItem[]>(
+        `/v1/quizzes/attempts${courseId ? `?course_id=${courseId}` : ""}`,
+      ),
   },
 
   memory: {

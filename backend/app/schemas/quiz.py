@@ -47,3 +47,12 @@ class QuizResultResponse(BaseModel):
     detected_misconceptions: List[dict] = []
     updated_mastery: Dict[str, float] = {}
     planner_updated: bool = True
+
+class QuizAttemptResponse(BaseModel):
+    id: str
+    course_id: str
+    total_items: int
+    correct_items: int
+    score_percentage: float
+    created_at: Optional[str] = None
+
