@@ -29,7 +29,7 @@ import { PageHeader, EmptyState } from "../components/ui";
 import jarvisCoreImg from "../assets/jarvis-core-glow.png";
 
 export function TutorPage() {
-  const { activeCourseId } = useAuth();
+  const { activeCourseId, setActiveCourseId } = useAuth();
   const [conversations, setConversations] = useState<AudioConversation[]>([]);
   const [convId, setConvId] = useState<string | undefined>();
   const [messages, setMessages] = useState<AudioMessage[]>([]);
@@ -98,7 +98,23 @@ export function TutorPage() {
     end.current?.scrollIntoView({ block: "nearest" });
   }, [messages, busy]);
   const send = async (text: string, audio?: Blob) => {
-    if (!activeCourseId || !text.trim() || request.current) return;
+    if (!text.trim() || request.current) return;
+    let courseId = activeCourseId;
+    if (!courseId) {
+      try {
+        const list = await api.courses.list();
+        if (list && list.length > 0) {
+          courseId = list[0].id;
+          setActiveCourseId(courseId);
+        }
+      } catch {
+        // proceed
+      }
+    }
+    if (!courseId) {
+      setError("Please select or create a course to begin consulting JARVIS.");
+      return;
+    }
     request.current = true;
     setBusy(true);
     setError("");
@@ -116,14 +132,22 @@ export function TutorPage() {
         created_at: stamp,
       },
     ]);
+    const startTime = Date.now();
     try {
       const answer = await api.tutor.askVoice(
-        activeCourseId,
+        courseId,
         text,
         audio,
         convId,
       );
       if (!mounted.current) return;
+
+      // Keep the holographic thinking animation clearly visible for at least 1800ms
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 1800) {
+        await new Promise((r) => setTimeout(r, 1800 - elapsed));
+      }
+
       setConvId(answer.conversation_id);
       setModel(answer.model_used);
       setMessages((m) => [
@@ -140,7 +164,7 @@ export function TutorPage() {
         },
       ]);
       if (autoSpeak) speak(answer.speech_text || answer.answer);
-      setConversations(await api.tutor.listVoiceConversations(activeCourseId));
+      setConversations(await api.tutor.listVoiceConversations(courseId));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not get a response.");
       setQuestion(text);
@@ -310,7 +334,7 @@ export function TutorPage() {
                     <button
                       className="button secondary"
                       key={p}
-                      onClick={() => setQuestion(p)}
+                      onClick={() => void send(p)}
                     >
                       {p}
                       <ArrowRight size={14} />
@@ -330,6 +354,9 @@ export function TutorPage() {
                   <div className="jarvis-core-image-holder">
                     <img
                       src={jarvisCoreImg}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/jarvis-core.png";
+                      }}
                       alt="JARVIS Neural Core Active"
                       className="jarvis-core-image"
                     />
@@ -394,7 +421,7 @@ export function TutorPage() {
                 type="button"
                 className="icon-button"
                 aria-label={voice.recording ? "Stop recording" : "Ask by voice"}
-                disabled={busy || !activeCourseId}
+                disabled={busy}
                 onClick={voice.recording ? voice.stop : voice.start}
               >
                 {voice.recording ? <Square size={18} /> : <Mic size={18} />}
@@ -406,7 +433,7 @@ export function TutorPage() {
               </small>
               <button
                 className="button"
-                disabled={busy || !question.trim() || !activeCourseId}
+                disabled={busy || !question.trim()}
               >
                 <Send size={16} />
                 Send
