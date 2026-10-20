@@ -421,20 +421,8 @@ button.bg-cyan-600 {
   padding: 32px;
   margin: auto;
 }
-.demo-banner {
-  min-height: 34px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 32px;
-  font-size: 10px;
-  color: var(--teal);
-  border-bottom: 1px solid var(--border);
-}
-.demo-banner > span:last-child {
-  color: var(--muted);
-}
+
+
 .mobile-menu,
 .mobile-bottom {
   display: none;
@@ -1361,14 +1349,8 @@ button.bg-cyan-600 {
   .workspace-content {
     padding: 24px 16px 100px;
   }
-  .demo-banner {
-    padding: 9px 16px;
-    font-size: 10px;
-    gap: 6px;
-  }
-  .demo-banner > span:last-child {
-    flex-basis: 100%;
-  }
+
+
   .mobile-bottom {
     display: flex;
     position: fixed;

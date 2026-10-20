@@ -109,7 +109,14 @@ class AgentOrchestrator:
                 resource_id = params.get("resource_id")
                 if not resource_id:
                     raise ValueError("Parameter 'resource_id' is required for ingest_material.")
+                from backend.app.models.resource import Resource
+                resource = db.query(Resource).filter(Resource.id == resource_id,
+                    Resource.user_id == user.id, Resource.course_id == course_id).first()
+                if not resource:
+                    raise ValueError("Resource not found in the authorized course")
                 ok = DocumentService.process_and_index_file(db, resource_id)
+                if not ok:
+                    raise ValueError("Document indexing failed")
                 tool_actions.append({"tool": "process_and_index_file", "resource_id": resource_id, "success": ok})
                 result_summary = f"Indexed resource {resource_id}. Success: {ok}."
 

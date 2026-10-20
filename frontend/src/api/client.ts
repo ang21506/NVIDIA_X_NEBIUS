@@ -1,4 +1,3 @@
-import { DEMO_TOKEN, demoRequest } from "./demo";
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 export interface User {
@@ -260,7 +259,15 @@ export interface ToolGrant {
 const TOKEN_KEY = "learnloop_access_token";
 
 export const authStorage = {
-  getToken: () => localStorage.getItem(TOKEN_KEY),
+  getToken: () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    // Expire retired browser-only sessions without touching saved user data.
+    if (token === "learnloop-browser-demo") {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    return token;
+  },
   setToken: (token: string) => localStorage.setItem(TOKEN_KEY, token),
   clearToken: () => localStorage.removeItem(TOKEN_KEY),
 };
@@ -270,7 +277,6 @@ async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const token = authStorage.getToken();
-  if (token === DEMO_TOKEN) return demoRequest(endpoint, options) as Promise<T>;
   const headers = new Headers(options.headers || {});
 
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
@@ -323,10 +329,6 @@ export const api = {
       apiFetch<AuthResponse>("/v1/auth/register", {
         method: "POST",
         body: JSON.stringify(userData),
-      }),
-    demoLogin: () =>
-      apiFetch<AuthResponse>("/v1/auth/demo-login", {
-        method: "POST",
       }),
     getMe: () => apiFetch<User>("/v1/auth/me"),
     updateProfile: (data: { full_name?: string; timezone?: string }) =>
@@ -548,10 +550,6 @@ export const api = {
     exportData: () => apiFetch<any>("/v1/settings/export", { method: "POST" }),
     deleteData: () =>
       apiFetch<{ message: string }>("/v1/settings/data", { method: "DELETE" }),
-    resetDemo: () =>
-      apiFetch<{ message: string }>("/v1/settings/reset-demo", {
-        method: "POST",
-      }),
   },
 
   health: () =>

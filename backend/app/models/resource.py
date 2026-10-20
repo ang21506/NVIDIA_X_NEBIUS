@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, JSON, UniqueConstraint
+from pgvector.sqlalchemy import Vector
 from backend.app.database import Base
 import uuid
 
@@ -35,4 +36,12 @@ class ResourceChunk(Base):
     content = Column(Text, nullable=False)
     token_count = Column(Integer, default=0)
     embedding_json = Column(Text, nullable=True)  # JSON-serialized list of floats
+    # Unbounded vector permits explicit model/dimension filtering without silently
+    # reinterpreting embeddings after a provider change. Add a dimension-specific
+    # ANN index only after selecting and benchmarking the production model.
+    embedding = Column(JSON().with_variant(Vector(), "postgresql"), nullable=True)
+    embedding_model = Column(String(255), nullable=False, server_default="hash-v1", default="hash-v1")
+    embedding_dimension = Column(Integer, nullable=False, server_default="384", default=384)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (UniqueConstraint("resource_id", "chunk_index", name="uq_resource_chunk_index"),)

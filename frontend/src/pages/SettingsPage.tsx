@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Download, Trash2, RotateCcw } from "lucide-react";
-import { api, authStorage } from "../api/client";
-import { DEMO_TOKEN } from "../api/demo";
+import { Download, Trash2 } from "lucide-react";
+import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { ThemeControl } from "../context/ThemeContext";
 import { PageHeader, Panel } from "../components/ui";
@@ -13,7 +12,6 @@ export function SettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const local = authStorage.getToken() === DEMO_TOKEN;
   const action = async (fn: () => Promise<void>) => {
     setBusy(true);
     setError("");
@@ -101,17 +99,13 @@ export function SettingsPage() {
       <Panel title="Data & privacy">
         <div className="privacy-explanation">
           <span className="tag">
-            {local ? "Local browser mode" : "Connected backend mode"}
+            Your account data
           </span>
           <p className="body-copy">
-            {local
-              ? "Sample courses, answers, misconceptions and example tutor conversations are stored in browser localStorage. No live AI inference occurs. Uploads retain file metadata only."
-              : "Your account and learning records are stored by the connected backend. Tutor requests may send document excerpts to its configured AI provider. This frontend cannot verify provider retention or training policies."}
+            Your account and learning records are saved to your account. Tutor requests may send document excerpts to the configured AI provider.
           </p>
           <p className="body-copy">
-            {local
-              ? "Clear local history removes demo answers, memory, materials metadata and conversations. Your account display and course list remain."
-              : "Clear learning history removes the records supported by the current API and resets mastery. It does not delete your account, uploads, documents or audio conversations. Export is the subset returned by the server."}
+            Clear learning history resets mastery and removes assessment records, learning memory and study tasks. Your account, uploaded materials and conversations remain.
           </p>
         </div>
         <div className="privacy-actions">
@@ -145,45 +139,20 @@ export function SettingsPage() {
             onClick={() => {
               if (
                 confirm(
-                  local
-                    ? "Clear local demo learning history? Courses remain. No server data will change."
-                    : "Clear server learning history? This does not delete uploads, conversations or your account.",
+                  "Clear learning history? This does not delete uploads, conversations or your account.",
                 )
               )
                 void action(async () => {
-                  const res = await api.settings.deleteData();
+                  await api.settings.deleteData();
                   setMessage(
-                    local
-                      ? res.message
-                      : "Learning records cleared through the API. Uploads, conversations and account data remain.",
+                    "Learning history cleared. Your uploads, conversations and account remain.",
                   );
                 });
             }}
           >
             <Trash2 size={16} />
-            {local ? "Clear local history" : "Clear learning history"}
+            Clear learning history resets mastery and removes assessment records, learning memory and study tasks. Your account, uploaded materials and conversations remain.
           </button>
-          {local && (
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => {
-                if (
-                  confirm(
-                    "Replace all local demo records with the original sample course?",
-                  )
-                )
-                  void action(async () => {
-                    await api.settings.resetDemo();
-                    await refreshUser();
-                    setMessage("Local demo reset.");
-                  });
-              }}
-            >
-              <RotateCcw size={16} />
-              Reset sample course
-            </button>
-          )}
         </div>
         <p className="fine-print">
           Theme preferences, onboarding preferences and personal sessions are

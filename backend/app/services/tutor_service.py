@@ -42,10 +42,13 @@ class TutorService:
     ) -> AudioConversation:
         if conversation_id:
             conv = db.query(AudioConversation).filter(
-                AudioConversation.id == conversation_id, AudioConversation.user_id == user_id
+                AudioConversation.id == conversation_id, AudioConversation.user_id == user_id,
+                AudioConversation.course_id == course_id
             ).first()
             if conv:
                 return conv
+            from fastapi import HTTPException
+            raise HTTPException(404, "Conversation not found in this course")
 
         conv = AudioConversation(
             user_id=user_id,

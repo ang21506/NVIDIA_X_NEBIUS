@@ -2,6 +2,7 @@ import math
 import hashlib
 from typing import List
 import numpy as np
+from backend.app.config import settings
 
 EMBEDDING_DIM = 384
 
@@ -42,11 +43,35 @@ class EmbeddingService:
 
     @classmethod
     def get_embedding(cls, text: str) -> List[float]:
-        return cls._hash_vector(text)
+        return cls.get_embeddings([text])[0]
+
+    @staticmethod
+    def model_id() -> str:
+        return "hash-v1" if settings.EMBEDDING_PROVIDER == "local" else settings.EMBEDDING_MODEL_ID
 
     @classmethod
     def get_embeddings(cls, texts: List[str]) -> List[List[float]]:
-        return [cls._hash_vector(t) for t in texts]
+        if not texts:
+            return []
+        if settings.EMBEDDING_PROVIDER == "local":
+            if settings.APP_ENV == "production":
+                raise RuntimeError("Configure a semantic embedding provider for production")
+            return [cls._hash_vector(t, settings.EMBEDDING_DIMENSION) for t in texts]
+        if settings.EMBEDDING_PROVIDER != "openai-compatible":
+            raise ValueError("Unknown embedding provider")
+        from openai import OpenAI
+        with OpenAI(api_key=settings.EMBEDDING_API_KEY or settings.NEBIUS_API_KEY,
+                    base_url=settings.EMBEDDING_BASE_URL, timeout=60.0, max_retries=2) as client:
+            response = client.embeddings.create(model=settings.EMBEDDING_MODEL_ID, input=texts)
+        vectors = [row.embedding for row in sorted(response.data, key=lambda row: row.index)]
+        if len(vectors) != len(texts):
+            raise ValueError("Embedding provider returned an incomplete batch")
+        for vector in vectors:
+            if len(vector) != settings.EMBEDDING_DIMENSION or not all(math.isfinite(v) for v in vector):
+                raise ValueError("Embedding dimensions or values do not match configuration")
+            if not any(vector):
+                raise ValueError("Embedding provider returned a zero vector")
+        return vectors
 
     @staticmethod
     def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:

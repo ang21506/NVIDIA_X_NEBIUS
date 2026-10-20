@@ -11,6 +11,8 @@ from backend.app.models.resource import Resource, ResourceChunk
 from backend.app.schemas.resource import ResourceResponse, ResourceChunkResponse
 from backend.app.api.deps import get_current_user
 from backend.app.services.document_service import DocumentService
+from backend.app.services.storage_service import StorageService
+from fastapi.responses import Response
 from backend.app.config import settings
 
 router = APIRouter(prefix="/v1", tags=["Resources"])
@@ -29,40 +31,43 @@ async def upload_resource(
 
     # File type validation
     allowed_extensions = [".pdf", ".txt", ".md"]
-    file_ext = os.path.splitext(file.filename)[1].lower()
+    filename = (file.filename or "document").replace("\\", "/").split("/")[-1]
+    file_ext = os.path.splitext(filename)[1].lower()
     if file_ext not in allowed_extensions:
         raise HTTPException(
             status_code=400,
             detail=f"Unsupported file type '{file_ext}'. Allowed formats: PDF, TXT, MD."
         )
 
-    # Secure local save
-    safe_filename = f"{uuid.uuid4()}_{file.filename}"
-    file_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
-
-    file_size = 0
-    with open(file_path, "wb") as buffer:
-        while chunk := await file.read(1024 * 1024):  # 1MB chunks
-            file_size += len(chunk)
-            if file_size > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
-                os.remove(file_path)
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"File exceeds maximum upload size of {settings.MAX_UPLOAD_SIZE_MB}MB."
-                )
-            buffer.write(chunk)
+    contents = await file.read(settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024 + 1)
+    file_size = len(contents)
+    if not file_size or file_size > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+        raise HTTPException(400, "File is empty or exceeds the upload limit")
+    resource_id = str(uuid.uuid4())
+    key = f"{current_user.id}/{course.id}/{resource_id}{file_ext}"
+    content_type = {".pdf": "application/pdf", ".txt": "text/plain", ".md": "text/markdown"}[file_ext]
+    try:
+        file_path = StorageService.save(key, contents, content_type)
+    except Exception:
+        raise HTTPException(503, "Document storage is unavailable")
 
     resource = Resource(
+        id=resource_id,
         user_id=current_user.id,
         course_id=course.id,
-        filename=file.filename,
+        filename=filename,
         file_path=file_path,
         file_size=file_size,
-        mime_type=file.content_type or "application/octet-stream",
+        mime_type=content_type,
         status="UPLOADED",
     )
     db.add(resource)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        StorageService.delete(file_path)
+        raise
     db.refresh(resource)
 
     # Process and index immediately in pipeline
@@ -160,5 +165,25 @@ def delete_resource(
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
 
-    DocumentService.delete_resource_and_chunks(db, resource)
+    try:
+        DocumentService.delete_resource_and_chunks(db, resource)
+    except Exception:
+        db.rollback()
+        raise HTTPException(503, "Document could not be deleted; retry later")
     return None
+
+
+@router.get("/resources/{id}/download")
+def download_resource(id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    resource = db.query(Resource).filter(Resource.id == id, Resource.user_id == current_user.id).first()
+    if not resource:
+        raise HTTPException(404, "Resource not found")
+    try:
+        content = StorageService.read(resource.file_path)
+    except Exception:
+        raise HTTPException(503, "Document is temporarily unavailable")
+    from urllib.parse import quote
+    return Response(content, media_type=resource.mime_type, headers={
+        "Content-Disposition": "attachment; filename*=UTF-8''" + quote(resource.filename, safe=""),
+        "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+    })

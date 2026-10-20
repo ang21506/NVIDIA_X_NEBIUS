@@ -6,7 +6,7 @@ import { Brand } from "../components/ui";
 import { useTheme } from "../context/ThemeContext";
 import { LandingExperience } from "../components/LandingExperience";
 export function LandingPage() {
-  const { login, register, localDemoLogin } = useAuth();
+  const { login, register } = useAuth();
   const navigate = useNavigate();
   const dialog = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<"login" | "register">("register");
@@ -43,15 +43,11 @@ export function LandingPage() {
       setError(
         e instanceof Error
           ? e.message
-          : "Unable to connect. Try the local demo instead.",
+          : "Unable to sign in. Please try again shortly.",
       );
     } finally {
       setBusy(false);
     }
-  };
-  const startDemo = async () => {
-    await localDemoLogin();
-    navigate("/dashboard");
   };
   return (
     <div
@@ -60,7 +56,6 @@ export function LandingPage() {
     >
       <LandingExperience
         onAuth={openAuth}
-        onDemo={startDemo}
         dark={dark}
         onToggleTheme={toggleTheme}
       />
@@ -84,7 +79,7 @@ export function LandingPage() {
         </h2>
         <p>
           {mode === "register"
-            ? "Create your account with the connected backend."
+            ? "Create your account and make room for better learning."
             : "Sign in to your learning workspace."}
         </p>
         <form onSubmit={submit}>
@@ -155,10 +150,6 @@ export function LandingPage() {
           {mode === "login"
             ? "New here? Create an account"
             : "Already have an account? Sign in"}
-        </button>
-        <hr />
-        <button className="button secondary full" onClick={startDemo}>
-          Explore the local demo instead
         </button>
       </dialog>
     </div>

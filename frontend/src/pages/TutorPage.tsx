@@ -17,12 +17,10 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import {
   api,
-  authStorage,
   type AudioConversation,
   type AudioMessage,
   type TutorCitation,
 } from "../api/client";
-import { DEMO_TOKEN } from "../api/demo";
 import { useAuth } from "../context/AuthContext";
 import { useVoiceInput } from "../hooks/useVoiceInput";
 import { PageHeader, EmptyState } from "../components/ui";
@@ -48,7 +46,6 @@ export function TutorPage() {
       mounted.current = false;
     };
   }, []);
-  const local = authStorage.getToken() === DEMO_TOKEN;
   const speak = (text: string) => {
     if (!window.speechSynthesis) {
       setNotice("Speech output is unavailable in this browser.");
@@ -267,7 +264,7 @@ export function TutorPage() {
               <span className="status-dot" />
             )}
             <strong>JARVIS</strong>
-            <small>{local ? "Local example · no AI inference" : model}</small>
+            <small>{model}</small>
           </div>
           <div className="message-stream" aria-live="polite">
             {messages.length ? (
@@ -455,9 +452,7 @@ export function TutorPage() {
             ))
           ) : (
             <p className="body-copy">
-              {local
-                ? "Local examples have no document citations. Your uploads are not indexed in this mode."
-                : "References will appear when the tutor returns retrieved passages. No sources have been returned yet."}
+              References will appear when the tutor returns retrieved passages. No sources have been returned yet.
             </p>
           )}
           <Link className="text-link" to="/resources">

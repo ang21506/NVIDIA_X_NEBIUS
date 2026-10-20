@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, authStorage, type AgentRun, type ToolGrant } from "../api/client";
-import { DEMO_TOKEN } from "../api/demo";
+import { api, type AgentRun, type ToolGrant } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { PageHeader, Panel, EmptyState } from "../components/ui";
 export function AgentActivityPage() {
@@ -10,7 +9,6 @@ export function AgentActivityPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
-  const local = authStorage.getToken() === DEMO_TOKEN;
   useEffect(() => {
     let alive = true;
     Promise.all([
@@ -63,20 +61,14 @@ export function AgentActivityPage() {
             ))
           ) : (
             <EmptyState
-              title={
-                local
-                  ? "No agent runs in local mode"
-                  : "No recorded actions yet"
-              }
+              title="No recorded actions yet"
             >
-              {local
-                ? "The sample learning loop uses a deterministic browser engine. It does not execute autonomous tools."
-                : "Run a study brief to inspect the resulting action log."}
+              Run a study brief to inspect the resulting action log.
             </EmptyState>
           )}
           <button
             className="button secondary"
-            disabled={busy || local || !activeCourseId}
+            disabled={busy || !activeCourseId}
             onClick={async () => {
               if (!activeCourseId) return;
               setBusy(true);
@@ -129,9 +121,7 @@ export function AgentActivityPage() {
             ))
           ) : (
             <p className="body-copy">
-              {local
-                ? "No external tools are connected to this local demo."
-                : "No permissions were returned by the service."}
+              No permissions were returned by the service.
             </p>
           )}
           <p className="fine-print">

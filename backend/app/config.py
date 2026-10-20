@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Database
+    MIGRATION_DATABASE_URL: str = ""
+    AUTO_CREATE_TABLES: bool = False
+    SEED_DEMO_DATA: bool = False
+    ENABLE_DEMO_MODE: bool = False
+    APP_ENV: str = "development"
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./backend/data/learnloop.db")
 
     # Nebius Token Factory / NVIDIA Nemotron
@@ -33,12 +38,20 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # File uploads & storage
+    STORAGE_PROVIDER: str = "local"
+    SUPABASE_URL: str = ""
+    SUPABASE_SECRET_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "course-materials"
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./backend/data/uploads")
     AUDIO_DIR: str = os.getenv("AUDIO_DIR", "./backend/data/audio")
     MAX_UPLOAD_SIZE_MB: int = 25
     CHUNK_SIZE: int = 450
     CHUNK_OVERLAP: int = 75
     EMBEDDING_DIMENSION: int = 384
+    EMBEDDING_PROVIDER: str = "local"
+    EMBEDDING_MODEL_ID: str = "hash-v1"
+    EMBEDDING_API_KEY: str = ""
+    EMBEDDING_BASE_URL: str = "https://api.tokenfactory.nebius.com/v1/"
 
     # Agent limits
     AGENT_MAX_TOOL_CALLS: int = 8

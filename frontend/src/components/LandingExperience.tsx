@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Brand } from "./ui";
 import { LearningSpiral } from "./LearningMotion";
+import { DriftWall } from "./DriftWall";
 import "./LandingExperience.css";
 
 const stages = [
@@ -48,12 +49,10 @@ const stages = [
 ];
 export function LandingExperience({
   onAuth,
-  onDemo,
   dark,
   onToggleTheme,
 }: {
   onAuth: (mode: "login" | "register") => void;
-  onDemo: () => void;
   dark: boolean;
   onToggleTheme: () => void;
 }) {
@@ -83,8 +82,8 @@ export function LandingExperience({
           <button className="lp-signin" onClick={() => onAuth("login")}>
             Sign in
           </button>
-          <button className="lp-button" onClick={onDemo}>
-            Try the demo <ArrowUpRight size={16} />
+          <button className="lp-button" onClick={() => onAuth("register")}>
+            Get started <ArrowUpRight size={16} />
           </button>
         </div>
       </header>
@@ -105,7 +104,7 @@ export function LandingExperience({
               companion.
             </p>
             <div className="lp-hero-actions">
-              <button className="lp-button" onClick={onDemo}>
+              <button className="lp-button" onClick={() => onAuth("register")}>
                 Find your learning rhythm <ArrowUpRight size={18} />
               </button>
               <a href="#method">
@@ -115,7 +114,7 @@ export function LandingExperience({
                 See how it works
               </a>
             </div>
-            <small>Explore the local demo. No account needed.</small>
+            <small>Your courses. Your progress. Your own workspace.</small>
             <div className="lp-margin-note">
               <span className="lp-hand-arrow">↳</span> Built for the part where
               learning gets interesting.
@@ -199,7 +198,7 @@ export function LandingExperience({
                 <span className="lp-step-number">0{stage + 1}</span>
                 <h3>{current.title}</h3>
                 <p>{current.copy}</p>
-                <button className="lp-text-button" onClick={onDemo}>
+                <button className="lp-text-button" onClick={() => onAuth("register")}>
                   Try it for yourself <ArrowRight size={17} />
                 </button>
               </div>
@@ -217,7 +216,7 @@ export function LandingExperience({
               </div>
               <p>{current.answer}</p>
               <div className="lp-paper-footer">
-                An example from the local demo <span>LearnLoop AI</span>
+                A closer look at the learning loop <span>LearnLoop AI</span>
               </div>
             </div>
           </div>
@@ -234,7 +233,7 @@ export function LandingExperience({
               Your study day has enough moving parts. Give them a place to come
               together.
             </p>
-            <button className="lp-text-button" onClick={onDemo}>
+            <button className="lp-text-button" onClick={() => onAuth("register")}>
               Step inside the workspace <ArrowUpRight size={18} />
             </button>
             <LearningSpiral />
@@ -281,16 +280,16 @@ export function LandingExperience({
           <div>
             {[
               [
-                "Can I try it without an account?",
-                "Yes. The local demo opens a sample course right in your browser. You can explore practice, learning memory, and the planner without signing up.",
+                "How do I get started?",
+                "Create an account, add a course, and upload your study materials. Your workspace keeps your coursework and learning progress together.",
               ],
               [
-                "Is JARVIS using live AI in the demo?",
-                "The local demo uses clearly labeled example responses. Live tutoring and source retrieval need the connected backend and its configured AI provider.",
+                "How does JARVIS use my study materials?",
+                "JARVIS retrieves relevant passages from your course materials to support its answers. AI explanations depend on service availability; check the references and any uncertainty noted in the response.",
               ],
               [
                 "Where does my learning data go?",
-                "Local demo records stay in this browser, with export and reset controls in Settings. In connected mode, the backend processes uploads and may send relevant excerpts to its configured AI provider.",
+                "Account and learning records are saved to your account, and uploaded materials are stored privately. Tutor requests may send relevant excerpts to the configured AI provider. Settings explains the available export and history controls.",
               ],
               [
                 "Does completing a task mean I mastered it?",
@@ -315,20 +314,20 @@ export function LandingExperience({
             ))}
           </div>
         </section>
-        <section className="lp-end">
+        <section className="lp-end lp-end-wall">
+          <div className="lp-end-copy">
           <span className="lp-kicker">YOUR NEXT “I GET IT” STARTS HERE</span>
           <h2>
             A fresh page.
             <br />
             <em>A clearer mind.</em>
           </h2>
-          <button className="lp-button" onClick={onDemo}>
+          <button className="lp-button" onClick={() => onAuth("register")}>
             Open your study space <ArrowUpRight size={18} />
           </button>
-          <p>No account needed for the local demo.</p>
-          <span className="lp-end-decoration" aria-hidden="true">
-            ↗
-          </span>
+          <p>Create an account to start your learning journey.</p>
+          </div>
+          <DriftWall />
         </section>
       </main>
       <footer className="lp-footer">

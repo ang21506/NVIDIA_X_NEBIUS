@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BrainCircuit } from "lucide-react";
-import { api, authStorage, type Misconception } from "../api/client";
-import { DEMO_TOKEN, readDemo, saveDemo } from "../api/demo";
+import { api, type Misconception } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { PageHeader, Panel, EmptyState } from "../components/ui";
 export function LearningMemoryPage() {
@@ -10,7 +9,6 @@ export function LearningMemoryPage() {
   const [memory, setMemory] = useState<Misconception[]>([]);
   const [filter, setFilter] = useState("all");
   const [error, setError] = useState("");
-  const [revision, setRevision] = useState(0);
   useEffect(() => {
     let alive = true;
     api.memory
@@ -24,19 +22,7 @@ export function LearningMemoryPage() {
     return () => {
       alive = false;
     };
-  }, [activeCourseId, revision]);
-  const remove = (id: string) => {
-    if (
-      !confirm(
-        "Remove this local memory entry? Its quiz evidence will remain in your practice history.",
-      )
-    )
-      return;
-    const state = readDemo();
-    state.memory = state.memory.filter((m) => m.id !== id);
-    saveDemo(state);
-    setRevision((n) => n + 1);
-  };
+  }, [activeCourseId]);
   const selected = memory.filter(
     (m) =>
       filter === "all" ||
@@ -141,16 +127,6 @@ export function LearningMemoryPage() {
                 </span>
               )}
             </div>
-            {authStorage.getToken() === DEMO_TOKEN ? (
-              <button className="text-link" onClick={() => remove(m.id)}>
-                Dismiss this local observation
-              </button>
-            ) : (
-              <p className="fine-print">
-                Individual memory deletion is not supported by the connected API
-                yet.
-              </p>
-            )}
           </Panel>
         ))
       ) : (

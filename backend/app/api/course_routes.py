@@ -193,7 +193,12 @@ def delete_course(
     course: Course = Depends(get_current_user_course),
     db: Session = Depends(get_db),
 ):
-    # Cascades resources, topics, tasks, misconceptions
+    from backend.app.services.storage_service import StorageService
+    for resource in db.query(Resource).filter(Resource.course_id == course.id, Resource.user_id == course.user_id):
+        try:
+            StorageService.delete(resource.file_path)
+        except Exception:
+            raise HTTPException(503, "Course files could not be deleted; retry later")
     db.delete(course)
     db.commit()
     return None

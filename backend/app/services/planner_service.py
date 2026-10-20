@@ -107,7 +107,7 @@ class PlannerService:
 
     @classmethod
     def recalculate_course_plan(
-        cls, db: Session, user_id: str, course_id: str
+        cls, db: Session, user_id: str, course_id: str, commit: bool = True
     ) -> List[StudyTask]:
         """
         Recalculates study task priorities deterministically whenever new assessment
@@ -177,5 +177,8 @@ class PlannerService:
                 db.add(new_task)
                 updated_tasks.append(new_task)
 
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         return updated_tasks

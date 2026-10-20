@@ -11,6 +11,7 @@ COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend/ /app/backend/
+COPY alembic.ini /app/alembic.ini
 
 ENV PYTHONPATH=/app
 EXPOSE 8000

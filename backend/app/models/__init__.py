@@ -8,6 +8,8 @@ from backend.app.models.misconception import Misconception
 from backend.app.models.planner import StudyTask
 from backend.app.models.agent import AgentRun, ToolGrant
 from backend.app.models.audio_chat import AudioConversation, AudioMessage
+from backend.app.models.learning_event import MasteryEvent
+from backend.app.models import integrity
 
 __all__ = [
     "Base",

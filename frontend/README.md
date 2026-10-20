@@ -1,6 +1,6 @@
 # LearnLoop AI frontend · JARVIS
 
-React, TypeScript and Vite frontend. This update changes only the frontend; the existing backend API remains unchanged.
+React, TypeScript and Vite frontend. The application uses real account authentication and the FastAPI backend.
 
 ## Start
 
@@ -10,7 +10,7 @@ npm ci
 npm run dev
 ```
 
-Open the localhost address printed by Vite. Choose the local demo on the landing page to explore without a backend. Existing sign-in uses the API: development requests to `/v1` are proxied to `http://127.0.0.1:8000`. Set `VITE_API_BASE_URL` for another API origin. Never put API secrets in Vite environment variables.
+Open the localhost address printed by Vite. Create an account or sign in to use your workspace. The backend must be running; development requests to `/v1` are proxied to `http://127.0.0.1:8000`. Set `VITE_API_BASE_URL` for another API origin. Never put API secrets in Vite environment variables.
 
 ## Screens and interactions
 
@@ -24,13 +24,11 @@ Open the localhost address printed by Vite. Choose the local demo on the landing
 - Analytics, agent activity, settings, export and privacy controls.
 - Dark/light/system appearance, responsive sidebar and mobile navigation.
 
-## Local demo boundaries
+## Account-based workspace
 
-The demo is explicitly labeled and uses deterministic sample responses, not live inference. Browser storage persists quiz attempts, mastery, misconception evidence, revision tasks, conversations and course/resource metadata. A wrong binary-search answer creates a specific memory and revision; a successful targeted retest resolves that memory and completes its revision task. A later mistake reopens revision without retaining stale completion evidence. Other errors are not falsely classified as that misconception.
+Public demo entry points and browser-only API routing have been removed. All account and learning requests use the backend. Retired browser-demo session tokens are cleared on startup without deleting saved learning records. Backend demo login/reset are disabled by default through ENABLE_DEMO_MODE=false.
 
-Uploads in local mode save metadata only, not document contents or embeddings. No autonomous tools execute. Browser preferences and personal sessions remain local even with a connected account. Planner completion is self-reported, not proof of mastery. Charts use recorded assessment data; no invented study-time or usage figures are displayed.
-
-Real tutoring, retrieval, ingestion, authentication and server privacy enforcement require the existing backend. Backend behavior and live model credentials were not changed or validated in this frontend work. The planner currently uses accessible agendas rather than a drag-and-drop time grid. Social sign-in, billing and native mobile apps are not implemented.
+Browser preferences and personal planner sessions remain local. Completing a session is not proof of mastery. Live tutoring requires the configured AI provider; its availability is reported separately from account access. See ../backend/DATABASE.md for backend setup.
 
 ## Checks
 
@@ -40,14 +38,19 @@ npm run lint
 npm run build
 ```
 
-TypeScript strict mode is enabled. `demo.test.mjs` checks the learning loop, validation, mastery bounds, resource metadata and clearing sample data. Route components are loaded on demand.
+TypeScript strict mode is enabled. `demo.test.mjs` checks a retired learning-engine fixture under tests/fixtures; that fixture is not imported or shipped by the application. Route components are loaded on demand.
 
 ## Implementation map
 
-`src/context` owns authentication and theme state. `src/components` contains the responsive shell and shared UI. `src/pages` contains routed screens. `src/api/client.ts` retains the backend contracts; `src/api/demo.ts` provides the explicit local adapter. `src/index.css` defines semantic theme tokens and responsive layout.
+`src/context` owns authentication and theme state. `src/components` contains the responsive shell and shared UI. `src/pages` contains routed screens. `src/api/client.ts` sends requests to the backend. `src/index.css` defines semantic theme tokens and responsive layout.
 
 ## Shared visual design
 
 The landing page and workspace now share the same light/dark/system preference through ThemeContext. New sessions default to light. The shared palette uses warm ivory and forest green in light mode, with deep green surfaces and sage accents in dark mode. `src/workspace.css` applies the editorial typography, surfaces, form controls and responsive spacing across all internal routes. The dashboard reuses the landing illustration.
 
 The sidebar uses an adapted branched menu from the user-supplied React Bits source, with existing Lucide icons and native router links. Sections collapse accessibly; active routes control the highlighted branch. Mobile navigation keeps the quick-access bar and drawer.
+# Learning motion
+
+The dashboard's course gallery and landing page's study-note spiral are lightweight CSS 3D interpretations of the user-supplied React Bits CircularCarousel and InfiniteSpiral references. They use original CSS illustrations, without third-party image requests or new animation dependencies. They do not reproduce the references' bendable-card rendering or momentum physics.
+
+The course gallery uses real course records, supports arrow buttons, keyboard navigation and swipe gestures, and opens the focused course. A single course stays centered; an empty workspace omits the gallery. The decorative spiral has pause/play controls, pauses on hover, off-screen and in hidden tabs, and becomes a static layout for reduced-motion preferences.

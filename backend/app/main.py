@@ -33,14 +33,37 @@ logger = logging.getLogger("learnloop")
 async def lifespan(app: FastAPI):
     # Startup: create tables and seed demo data
     logger.info("Initializing database schema...")
-    Base.metadata.create_all(bind=engine)
+    if settings.APP_ENV == "production":
+        if engine.dialect.name != "postgresql":
+            raise RuntimeError("Production requires PostgreSQL")
+        if settings.AUTO_CREATE_TABLES or settings.SEED_DEMO_DATA or settings.ENABLE_DEMO_MODE:
+            raise RuntimeError("Production requires migrations and demo seeding disabled")
+        if len(settings.JWT_SECRET) < 32 or "learnloop" in settings.JWT_SECRET.lower():
+            raise RuntimeError("Set a unique random JWT_SECRET for production")
+        if settings.EMBEDDING_PROVIDER != "openai-compatible" or settings.EMBEDDING_MODEL_ID == "hash-v1":
+            raise RuntimeError("Configure a semantic embedding model for production")
+    if settings.AUTO_CREATE_TABLES:
+        if engine.dialect.name != "sqlite":
+            raise RuntimeError("Use Alembic migrations for PostgreSQL")
+        Base.metadata.create_all(bind=engine)
+    else:
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from alembic.runtime.migration import MigrationContext
+        from pathlib import Path
+        config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+        with engine.connect() as connection:
+            current = MigrationContext.configure(connection).get_current_revision()
+        if current != ScriptDirectory.from_config(config).get_current_head():
+            raise RuntimeError("Database schema is out of date. Run python -m alembic upgrade head")
     
     # Auto-seed demo student and ML course
     try:
         from backend.app.database import SessionLocal
-        with SessionLocal() as db:
-            SeedService.seed_demo_data(db)
-        logger.info("Demo user and Machine Learning Fundamentals course initialized.")
+        if settings.SEED_DEMO_DATA and settings.ENABLE_DEMO_MODE:
+            with SessionLocal() as db:
+                SeedService.seed_demo_data(db)
+            logger.info("Demo data initialized.")
     except Exception as e:
         logger.warning(f"Could not auto-seed demo data on startup: {e}")
 

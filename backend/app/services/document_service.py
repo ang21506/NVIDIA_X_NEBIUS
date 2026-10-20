@@ -1,18 +1,24 @@
 import os
 import json
 import logging
+import io
 from typing import List, Tuple
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, Float
+from pgvector.sqlalchemy import Vector
 from backend.app.models.resource import Resource, ResourceChunk
 from backend.app.services.embedding_service import EmbeddingService
 from backend.app.config import settings
+from backend.app.services.storage_service import StorageService
 
 logger = logging.getLogger(__name__)
 
 class DocumentService:
     @staticmethod
     def chunk_text(text: str, chunk_size: int = 400, overlap: int = 60) -> List[str]:
+        if not 0 <= overlap < chunk_size:
+            raise ValueError("Chunk overlap must be smaller than a positive chunk size")
         words = text.split()
         if not words:
             return []
@@ -38,10 +44,11 @@ class DocumentService:
             db.commit()
 
             file_path = resource.file_path
+            file_data = StorageService.read(file_path)
             extracted_pages: List[Tuple[int, str]] = []
 
             if resource.filename.lower().endswith(".pdf"):
-                reader = PdfReader(file_path)
+                reader = PdfReader(io.BytesIO(file_data))
                 resource.page_count = len(reader.pages)
                 for page_idx, page in enumerate(reader.pages, start=1):
                     page_text = page.extract_text() or ""
@@ -50,8 +57,7 @@ class DocumentService:
                         extracted_pages.append((page_idx, cleaned))
             else:
                 # Text / Markdown file
-                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-                    content = f.read()
+                content = file_data.decode("utf-8", errors="replace")
                 cleaned = " ".join(content.split())
                 extracted_pages.append((1, cleaned))
                 resource.page_count = 1
@@ -75,11 +81,16 @@ class DocumentService:
                             content=chunk_text,
                             token_count=len(chunk_text.split()),
                             embedding_json=json.dumps(embedding),
+                            embedding=embedding,
+                            embedding_model=EmbeddingService.model_id(),
+                            embedding_dimension=len(embedding),
                         )
                     )
                     global_chunk_idx += 1
 
             # Delete old chunks if any exist for re-indexing
+            if not chunk_records:
+                raise ValueError("No readable text found. Scanned documents need OCR before indexing.")
             db.query(ResourceChunk).filter(ResourceChunk.resource_id == resource.id).delete()
             db.bulk_save_objects(chunk_records)
             
@@ -90,8 +101,9 @@ class DocumentService:
 
         except Exception as e:
             logger.exception(f"Error processing resource {resource_id}: {e}")
+            db.rollback()
             resource.status = "FAILED"
-            resource.error_message = str(e)
+            resource.error_message = "Document indexing failed. Check the file and embedding configuration."
             db.commit()
             return False
 
@@ -103,12 +115,26 @@ class DocumentService:
         Retrieves relevant document chunks filtered strictly by user_id and course_id.
         """
         query_embedding = EmbeddingService.get_embedding(query)
-        chunks = (
+        chunk_query = (
             db.query(ResourceChunk, Resource.filename)
             .join(Resource, ResourceChunk.resource_id == Resource.id)
-            .filter(ResourceChunk.user_id == user_id, ResourceChunk.course_id == course_id)
-            .all()
+            .filter(ResourceChunk.user_id == user_id, ResourceChunk.course_id == course_id,
+                    Resource.user_id == user_id, Resource.course_id == course_id,
+                    Resource.status == "INDEXED",
+                    ResourceChunk.embedding_model == EmbeddingService.model_id(),
+                    ResourceChunk.embedding_dimension == len(query_embedding))
         )
+
+        if db.get_bind().dialect.name == "postgresql":
+            distance = ResourceChunk.embedding.op("<=>", return_type=Float)(cast(query_embedding, Vector()))
+            rows = (chunk_query.filter(ResourceChunk.embedding.is_not(None))
+                    .add_columns(distance.label("distance"))
+                    .order_by(distance).limit(top_k).all())
+            return [{"id": c.id, "resource_id": c.resource_id, "filename": name,
+                     "page_number": c.page_number, "content": c.content,
+                     "similarity": round(1 - float(d), 4)} for c, name, d in rows]
+
+        chunks = chunk_query.all()
 
         scored = []
         for chunk, filename in chunks:
@@ -133,11 +159,8 @@ class DocumentService:
         """
         Deletes a resource file from disk and cascades chunk/embedding deletion.
         """
-        try:
-            if os.path.exists(resource.file_path):
-                os.remove(resource.file_path)
-        except Exception as e:
-            logger.warning(f"Could not remove file on disk: {e}")
+        # Keep the record if object deletion fails, so the operation can be retried.
+        StorageService.delete(resource.file_path)
 
         db.query(ResourceChunk).filter(ResourceChunk.resource_id == resource.id).delete()
         db.delete(resource)

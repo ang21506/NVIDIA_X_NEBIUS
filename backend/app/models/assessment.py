@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Float, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Text, Boolean, DateTime, ForeignKey, UniqueConstraint, CheckConstraint
 from backend.app.database import Base
 import uuid
 
@@ -33,6 +33,14 @@ class QuizAttempt(Base):
     score_percentage = Column(Float, default=0.0, nullable=False)
     submitted_at = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
+    idempotency_key = Column(String(128), nullable=True)
+    request_hash = Column(String(64), nullable=True)
+    result_json = Column(Text, nullable=True)
+    __table_args__ = (
+        UniqueConstraint("user_id", "idempotency_key", name="uq_user_quiz_request"),
+        CheckConstraint("score_percentage >= 0 AND score_percentage <= 100", name="ck_quiz_score"),
+        CheckConstraint("correct_items >= 0 AND correct_items <= total_items", name="ck_quiz_counts"),
+    )
 
 class QuizAnswer(Base):
     __tablename__ = "quiz_answers"
@@ -46,3 +54,4 @@ class QuizAnswer(Base):
     detected_misconception = Column(Text, nullable=True)
     evidence_quote = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint("attempt_id", "quiz_item_id", name="uq_attempt_question"),)

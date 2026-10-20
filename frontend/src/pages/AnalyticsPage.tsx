@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   api,
-  authStorage,
   type MasteryItem,
   type StudyTask,
   type QuizAttemptItem,
 } from "../api/client";
-import { DEMO_TOKEN, readDemo } from "../api/demo";
 import { useAuth } from "../context/AuthContext";
 import { PageHeader, Panel, EmptyState, Progress } from "../components/ui";
 import {
@@ -37,24 +35,7 @@ export function AnalyticsPage() {
       .then(([mastery, plan, quizAttempts]) => {
         if (!alive) return;
         setData({ mastery, tasks: plan.tasks });
-        if (quizAttempts && quizAttempts.length > 0) {
-          setAttempts(quizAttempts);
-        } else if (authStorage.getToken() === DEMO_TOKEN) {
-          setAttempts(
-            readDemo()
-              .attempts.filter((a) => a.course_id === activeCourseId)
-              .map((a) => ({
-                id: a.attempt_id,
-                course_id: a.course_id,
-                total_items: a.total_items,
-                correct_items: a.correct_items,
-                score_percentage: a.score_percentage,
-                created_at: a.created_at,
-              })),
-          );
-        } else {
-          setAttempts([]);
-        }
+        setAttempts(quizAttempts || []);
       })
       .catch((e) => {
         if (alive) setError(e.message);

@@ -8,7 +8,7 @@ import type {
   ResourceItem,
   User,
   AudioConversation,
-} from "./client";
+} from "../../src/api/client";
 export const DEMO_TOKEN = "learnloop-browser-demo";
 const KEY = "learnloop-demo-v1";
 const now = () => new Date().toISOString();

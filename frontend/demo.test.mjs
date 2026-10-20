@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import ts from "typescript";
 const source = await readFile(
-  new URL("./src/api/demo.ts", import.meta.url),
+  new URL("./tests/fixtures/learning-engine.ts", import.meta.url),
   "utf8",
 );
 const compiled = ts.transpileModule(source, {

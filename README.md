@@ -1,5 +1,9 @@
 # LearnLoop AI — Autonomous, Privacy-Aware Personal Learning Agent
 
+**Database setup:** see [backend/DATABASE.md](backend/DATABASE.md) for PostgreSQL,
+Supabase storage, migrations and production limitations. Run `python -m alembic
+upgrade head` before starting the backend; demo data is now explicitly opt-in.
+
 > **Upload what you study. LearnLoop learns what you need. Every study session produces the next best action.**
 > 
 > *Built for the NVIDIA & Nebius AI Hackathon 2026.*

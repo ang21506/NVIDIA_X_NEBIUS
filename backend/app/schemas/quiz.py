@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class QuizGenerateRequest(BaseModel):
     course_id: str
@@ -26,6 +26,7 @@ class QuizSubmitAnswer(BaseModel):
 class QuizSubmitRequest(BaseModel):
     course_id: str
     answers: List[QuizSubmitAnswer]
+    idempotency_key: Optional[str] = Field(default=None, min_length=8, max_length=128)
 
 class QuizAnswerResult(BaseModel):
     quiz_item_id: str

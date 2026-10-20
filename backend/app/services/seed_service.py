@@ -183,6 +183,9 @@ class SeedService:
                     content=para,
                     token_count=len(para.split()),
                     embedding_json=json.dumps(emb),
+                    embedding=emb,
+                    embedding_model=EmbeddingService.model_id(),
+                    embedding_dimension=len(emb),
                 )
                 db.add(chunk)
 

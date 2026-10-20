@@ -16,6 +16,7 @@ from backend.app.services.auth_service import (
 )
 from backend.app.api.deps import get_current_user
 from backend.app.services.seed_service import SeedService
+from backend.app.config import settings
 
 router = APIRouter(prefix="/v1/auth", tags=["Authentication"])
 
@@ -74,6 +75,8 @@ def demo_login(db: Session = Depends(get_db)):
     """
     Enables hackathon judges to enter the pre-seeded ML course experience immediately.
     """
+    if settings.APP_ENV == "production" or not settings.ENABLE_DEMO_MODE:
+        raise HTTPException(404, "Demo login is disabled")
     user = SeedService.seed_demo_data(db)
     token = create_access_token({"sub": user.id, "email": user.email})
     return Token(

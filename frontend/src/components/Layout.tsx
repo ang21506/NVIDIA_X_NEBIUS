@@ -16,8 +16,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { api, authStorage, type Course } from "../api/client";
-import { DEMO_TOKEN } from "../api/demo";
+import { api, type Course } from "../api/client";
 import { ThemeControl, ThemeToggle } from "../context/ThemeContext";
 import { Brand } from "./ui";
 import { BranchedMenu } from "./BranchedMenu";
@@ -49,7 +48,6 @@ export function Layout() {
       window.removeEventListener("learnloop-courses-changed", refresh);
   }, []);
   const location = useLocation();
-  const local = authStorage.getToken() === DEMO_TOKEN;
   useEffect(() => {
     let alive = true;
     api.courses
@@ -115,7 +113,7 @@ export function Layout() {
             <div>
               <strong>{user?.full_name}</strong>
               <small>
-                {local ? "Local demo workspace" : "Personal workspace"}
+                Personal workspace
               </small>
             </div>
             <button
@@ -165,16 +163,6 @@ export function Layout() {
             <ThemeToggle />
           </div>
         </header>
-        {local && (
-          <div className="demo-banner">
-            <span className="status-dot" />
-            Local demo{" "}
-            <span>
-              Sample learning data stays in this browser. JARVIS responses are
-              examples; no live AI calls.
-            </span>
-          </div>
-        )}
         {error && (
           <div role="alert" className="error-banner">
             Could not load courses: {error}

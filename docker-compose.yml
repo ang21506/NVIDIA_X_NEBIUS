@@ -24,7 +24,9 @@ services:
       dockerfile: Dockerfile.backend
     container_name: learnloop-backend
     environment:
-      DATABASE_URL: postgresql://learnloop_user:securepassword@db:5432/learnloop_db
+      DATABASE_URL: postgresql+psycopg://learnloop_user:securepassword@db:5432/learnloop_db
+      AUTO_CREATE_TABLES: "false"
+      SEED_DEMO_DATA: "false"
       NEBIUS_API_KEY: ${NEBIUS_API_KEY:-}
       NEBIUS_BASE_URL: ${NEBIUS_BASE_URL:-https://api.tokenfactory.nebius.com/v1/}
       NEBIUS_MODEL_ID: ${NEBIUS_MODEL_ID:-nvidia/nemotron-3-nano-30b-a3b}
@@ -32,6 +34,7 @@ services:
       UPLOAD_DIR: /app/backend/data/uploads
     ports:
       - "8000:8000"
+    command: ["sh", "-c", "python -m alembic upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"]
     volumes:
       - uploads_data:/app/backend/data/uploads
     depends_on:

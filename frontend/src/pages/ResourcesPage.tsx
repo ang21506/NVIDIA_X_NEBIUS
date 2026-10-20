@@ -1,8 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Upload, FileText, Trash2, Search, ArrowRight } from "lucide-react";
-import { api, authStorage, type ResourceItem } from "../api/client";
-import { DEMO_TOKEN } from "../api/demo";
+import { api, type ResourceItem } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { PageHeader, Panel, EmptyState } from "../components/ui";
 export function ResourcesPage() {
@@ -14,7 +13,6 @@ export function ResourcesPage() {
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   const [selected, setSelected] = useState<ResourceItem | null>(null);
-  const local = authStorage.getToken() === DEMO_TOKEN;
   useEffect(() => {
     let alive = true;
     if (!activeCourseId) return;
@@ -58,9 +56,7 @@ export function ResourcesPage() {
   const remove = async (r: ResourceItem) => {
     if (
       !confirm(
-        local
-          ? "Delete this local file metadata?"
-          : "Delete this resource and its indexed chunks?",
+        "Delete this resource and its indexed chunks?",
       )
     )
       return;
@@ -102,16 +98,12 @@ export function ResourcesPage() {
           <button className="button" disabled={!activeCourseId || busy}>
             {busy
               ? "Adding material…"
-              : local
-                ? "Save file metadata"
-                : "Upload material"}
+              : "Upload material"}
           </button>
         </form>
         <p className="fine-print">
           PDF, TXT and Markdown · Up to 25 MB.{" "}
-          {local
-            ? "Local demo saves name, type and size only. File contents are not stored or indexed."
-            : "The backend reports processing status. Only indexed materials can support retrieval."}
+          Uploaded materials are processed for search. Ready materials can support answers from JARVIS.
         </p>
       </Panel>
       {error && (
@@ -156,9 +148,7 @@ export function ResourcesPage() {
                   </small>
                 </button>
                 <span className="tag">
-                  {local
-                    ? "Metadata only"
-                    : r.status === "INDEXED"
+                  {r.status === "INDEXED"
                       ? "Ready"
                       : r.status.toLowerCase()}
                 </span>
@@ -195,11 +185,9 @@ export function ResourcesPage() {
               {selected.page_count} extracted pages
             </p>
             <p className="fine-print">
-              {local
-                ? "No document preview or retrieval is available in local mode."
-                : "The current API exposes metadata; a document preview endpoint is not available."}
+              Document preview is not available in this view.
             </p>
-            {!local && selected.status === "INDEXED" && (
+            {selected.status === "INDEXED" && (
               <Link className="button secondary" to="/tutor">
                 Ask JARVIS
                 <ArrowRight size={15} />

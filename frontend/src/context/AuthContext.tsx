@@ -1,14 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, authStorage, User } from "../api/client";
-import { DEMO_TOKEN, readDemo, saveDemo } from "../api/demo";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
-  demoLogin: () => Promise<void>;
-  localDemoLogin: () => Promise<void>;
   logout: () => void;
   activeCourseId: string | null;
   setActiveCourseId: (id: string | null) => void;
@@ -80,22 +77,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await fetchProfile();
   };
 
-  const demoLogin = async () => {
-    const res = await api.auth.demoLogin();
-    authStorage.setToken(res.access_token);
-    await fetchProfile();
-  };
-
   const logout = () => {
     authStorage.clearToken();
     setUser(null);
     setActiveCourseId(null);
-  };
-  const localDemoLogin = async () => {
-    saveDemo(readDemo());
-    authStorage.setToken(DEMO_TOKEN);
-    setActiveCourseId(readDemo().courses[0]?.id || null);
-    await fetchProfile();
   };
 
   return (
@@ -105,8 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isLoading,
         login,
         register,
-        demoLogin,
-        localDemoLogin,
         logout,
         activeCourseId,
         setActiveCourseId,

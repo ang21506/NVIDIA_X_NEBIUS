@@ -129,12 +129,7 @@
   height: 38px;
   min-width: 38px;
 }
-.demo-banner {
-  background: var(--elevated);
-  border: 0;
-  padding-block: 10px;
-  font-size: 10px;
-}
+
 .sidebar {
   background: var(--sidebar);
 }
@@ -450,9 +445,7 @@ input[type="radio"] {
   .topbar-actions .course-picker {
     max-width: calc(100% - 46px);
   }
-  .demo-banner {
-    padding-inline: 18px;
-  }
+
   .metric-grid {
     grid-template-columns: 1fr 1fr;
   }
