@@ -109,7 +109,7 @@ export function TutorPage() {
       }
     }
     if (!courseId) {
-      setError("Please select or create a course to begin consulting JARVIS.");
+      setError("Please select or create a course to begin consulting KEVIN.");
       return;
     }
     request.current = true;
@@ -194,7 +194,7 @@ export function TutorPage() {
     <div className="page-stack">
       <PageHeader
         eyebrow="A LITTLE GUIDANCE GOES A LONG WAY"
-        title="Think it through with JARVIS."
+        title="Think it through with KEVIN."
         description="Ask a question. Explore an example. Check the evidence."
       />
       <div className="tutor-workspace">
@@ -250,7 +250,7 @@ export function TutorPage() {
             {busy ? (
               <img
                 src={jarvisCoreImg}
-                alt="JARVIS Active"
+                alt="KEVIN Active"
                 style={{
                   width: 22,
                   height: 22,
@@ -263,7 +263,7 @@ export function TutorPage() {
             ) : (
               <span className="status-dot" />
             )}
-            <strong>JARVIS</strong>
+            <strong>KEVIN</strong>
             <small>{model}</small>
           </div>
           <div className="message-stream" aria-live="polite">
@@ -271,7 +271,7 @@ export function TutorPage() {
               messages.map((m) => (
                 <article key={m.id} className={`tutor-message ${m.role}`}>
                   <span className="message-role">
-                    {m.role === "user" ? "You" : "JARVIS"}
+                    {m.role === "user" ? "You" : "KEVIN"}
                   </span>
                   <div className="markdown">
                     <ReactMarkdown
@@ -354,7 +354,7 @@ export function TutorPage() {
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = jarvisCoreImg;
                       }}
-                      alt="JARVIS Neural Core Active"
+                      alt="KEVIN Neural Core Active"
                       className="jarvis-core-image"
                     />
                     <div className="jarvis-core-scanner" />
@@ -363,7 +363,7 @@ export function TutorPage() {
                 <div className="jarvis-thinking-meta">
                   <div className="jarvis-thinking-header">
                     <span className="jarvis-pulse-dot" />
-                    <strong className="jarvis-thinking-title">JARVIS NEURAL CORE ACTIVE</strong>
+                    <strong className="jarvis-thinking-title">KEVIN NEURAL CORE ACTIVE</strong>
                   </div>
                   <p className="jarvis-thinking-text">
                     Synthesizing course lecture notes & reasoning with NVIDIA Nemotron…

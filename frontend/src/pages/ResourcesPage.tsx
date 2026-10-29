@@ -189,7 +189,7 @@ export function ResourcesPage() {
             </p>
             {selected.status === "INDEXED" && (
               <Link className="button secondary" to="/tutor">
-                Ask JARVIS
+                Ask KEVIN
                 <ArrowRight size={15} />
               </Link>
             )}

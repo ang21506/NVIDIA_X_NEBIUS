@@ -23,7 +23,7 @@ import { BranchedMenu } from "./BranchedMenu";
 const navigation = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "Courses", path: "/courses", icon: GraduationCap },
-  { label: "AI Tutor · JARVIS", path: "/tutor", icon: MessageSquare },
+  { label: "AI Tutor · KEVIN", path: "/tutor", icon: MessageSquare },
   { label: "Study Planner", path: "/planner", icon: CalendarDays },
   { label: "Practice", path: "/quizzes", icon: CheckSquare },
   { label: "Learning Library", path: "/resources", icon: FolderOpen },

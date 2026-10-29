@@ -19,8 +19,8 @@ const stages = [
   {
     label: "Understand",
     title: "Start with the why.",
-    copy: "Bring a tricky concept to JARVIS. Work through an explanation, ask a follow-up, and inspect the sources returned with the answer.",
-    note: "JARVIS / CONCEPT NOTE",
+    copy: "Bring a tricky concept to KEVIN. Work through an explanation, ask a follow-up, and inspect the sources returned with the answer.",
+    note: "KEVIN / CONCEPT NOTE",
     question: "Why is binary search so efficient?",
     answer:
       "Each comparison cuts the possibilities in half. Less searching. The same answer.",
@@ -284,8 +284,8 @@ export function LandingExperience({
                 "Create an account, add a course, and upload your study materials. Your workspace keeps your coursework and learning progress together.",
               ],
               [
-                "How does JARVIS use my study materials?",
-                "JARVIS retrieves relevant passages from your course materials to support its answers. AI explanations depend on service availability; check the references and any uncertainty noted in the response.",
+                "How does KEVIN use my study materials?",
+                "KEVIN retrieves relevant passages from your course materials to support its answers. AI explanations depend on service availability; check the references and any uncertainty noted in the response.",
               ],
               [
                 "Where does my learning data go?",

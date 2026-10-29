@@ -507,8 +507,8 @@ export async function demoRequest(
       state.conversations.push(conv);
     }
     const answer = /binary|search|halv|complexity/i.test(question)
-      ? "Local example · JARVIS\n\nBinary search works on sorted data. Compare the target with the middle value, then keep only the half that can contain it.\n\nFor 64 values: 64 → 32 → 16 → 8 → 4 → 2 → 1. This gives O(log n) comparisons. Linear search may inspect every element, giving O(n).\n\nTry the follow-up practice question to check your understanding."
-      : "Local example · JARVIS\n\nThis browser demo includes a worked explanation of binary search. Ask about binary search or complexity to explore it. Other questions require the connected tutor API; no live model is running in this mode.";
+      ? "Local example · KEVIN\n\nBinary search works on sorted data. Compare the target with the middle value, then keep only the half that can contain it.\n\nFor 64 values: 64 → 32 → 16 → 8 → 4 → 2 → 1. This gives O(log n) comparisons. Linear search may inspect every element, giving O(n).\n\nTry the follow-up practice question to check your understanding."
+      : "Local example · KEVIN\n\nThis browser demo includes a worked explanation of binary search. Ask about binary search or complexity to explore it. Other questions require the connected tutor API; no live model is running in this mode.";
     const messageId = id();
     conv.messages.push(
       {

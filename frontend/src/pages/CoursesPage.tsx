@@ -221,7 +221,7 @@ export function CoursesPage() {
                   <ArrowRight size={16} />
                 </Link>
                 <Link className="text-link" to="/tutor">
-                  Ask JARVIS
+                  Ask KEVIN
                 </Link>
               </div>
             </Panel>

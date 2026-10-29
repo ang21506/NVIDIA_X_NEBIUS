@@ -109,7 +109,7 @@ export function LearningMemoryPage() {
                   <ArrowRight size={16} />
                 </Link>
                 <Link className="text-link" to="/tutor">
-                  Review with JARVIS
+                  Review with KEVIN
                   <ArrowRight size={15} />
                 </Link>
               </div>

@@ -112,20 +112,20 @@ def test_document_retrieval_and_citations(client):
     assert len(tutor_data["citations"]) > 0
     assert "lecture_4_metrics_imbalanced.txt" in tutor_data["citations"][0]["filename"]
 
-def test_jarvis_voice_audio_conversations(client):
+def test_kevin_voice_audio_conversations(client):
     demo_token = client.post("/v1/auth/demo-login").json()["access_token"]
     headers = {"Authorization": f"Bearer {demo_token}"}
 
     courses = client.get("/v1/courses", headers=headers).json()
     ml_course = next(c for c in courses if c["code"] == "CS-401")
 
-    # Ask J.A.R.V.I.S. via voice endpoint
+    # Ask KEVIN via voice endpoint
     voice_resp = client.post(
         "/v1/tutor/voice/ask",
         headers=headers,
         data={
             "course_id": ml_course["id"],
-            "transcript": "J.A.R.V.I.S., analyze false positives versus false negatives in disease diagnosis.",
+            "transcript": "KEVIN, analyze false positives versus false negatives in disease diagnosis.",
         }
     )
     assert voice_resp.status_code == 200

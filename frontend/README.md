@@ -1,4 +1,4 @@
-# LearnLoop AI frontend · JARVIS
+# LearnLoop AI frontend · KEVIN
 
 React, TypeScript and Vite frontend. The application uses real account authentication and the FastAPI backend.
 
@@ -16,7 +16,7 @@ Open the localhost address printed by Vite. Create an account or sign in to use 
 
 - Landing page, sign-in/registration forms and onboarding preferences.
 - Dashboard and course workspace with prerequisites and next-step links.
-- JARVIS tutor: conversation history, Markdown/math rendering, source excerpts, copy, and optional browser voice controls.
+- KEVIN tutor: conversation history, Markdown/math rendering, source excerpts, copy, and optional browser voice controls.
 - Practice: answer navigation, scoring, explanations and targeted follow-up.
 - Learning memory: evidence, status filtering and retests.
 - Planner: day/week/month agendas, session creation, rescheduling and completion.
