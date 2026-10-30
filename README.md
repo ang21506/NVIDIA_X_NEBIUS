@@ -1,5 +1,11 @@
 # LearnLoop AI — Autonomous, Privacy-Aware Personal Learning Agent
 
+## Demo video
+
+[Open the demo video folder on Google Drive](https://drive.google.com/drive/folders/1CqAnhNELeM9Bk8jGwMUvQwhxROZgkviv?usp=sharing)
+
+**Upload pending:** The team will upload the project demonstration video to this folder.
+
 **Database setup:** see [backend/DATABASE.md](backend/DATABASE.md) for PostgreSQL,
 Supabase storage, migrations and production limitations. Run `python -m alembic
 upgrade head` before starting the backend; demo data is now explicitly opt-in.
