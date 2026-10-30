@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from backend.app.models.misconception import Misconception
@@ -39,8 +39,8 @@ class MisconceptionService:
             existing.evidence_answer = evidence_answer
             existing.last_assessed_outcome = "INCORRECT"
             existing.status = "NEEDS_RETEST"
-            existing.next_review_at = datetime.utcnow() + timedelta(days=1)
-            existing.updated_at = datetime.utcnow()
+            existing.next_review_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=1)
+            existing.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             if remediation_provided:
                 existing.remediation_provided = remediation_provided
             db.flush()
@@ -58,7 +58,7 @@ class MisconceptionService:
             remediation_provided=remediation_provided,
             confidence=confidence,
             status="NEWLY_DETECTED",
-            next_review_at=datetime.utcnow() + timedelta(days=1),
+            next_review_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=1),
             attempt_count=1,
             last_assessed_outcome="INCORRECT",
         )
@@ -93,9 +93,9 @@ class MisconceptionService:
         if open_misconception:
             open_misconception.status = "RESOLVED"
             open_misconception.last_assessed_outcome = "CORRECT"
-            open_misconception.resolved_at = datetime.utcnow()
+            open_misconception.resolved_at = datetime.now(timezone.utc).replace(tzinfo=None)
             open_misconception.evidence_answer = f"Resolved via re-test: {evidence_answer}"
-            open_misconception.updated_at = datetime.utcnow()
+            open_misconception.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.flush()
             return open_misconception
         return None

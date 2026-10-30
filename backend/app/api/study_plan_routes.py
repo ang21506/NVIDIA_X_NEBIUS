@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -120,14 +120,14 @@ def update_study_task(
     if payload.status is not None:
         task.status = payload.status
         if payload.status == "COMPLETED" and not task.completed_at:
-            task.completed_at = datetime.utcnow()
+            task.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
             task.completion_evidence = payload.completion_evidence or "Manual confirmation by student"
     if payload.due_date is not None:
         task.due_date = payload.due_date
     if payload.completion_evidence is not None:
         task.completion_evidence = payload.completion_evidence
 
-    task.updated_at = datetime.utcnow()
+    task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     db.refresh(task)
 

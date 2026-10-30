@@ -20,8 +20,23 @@ from backend.app.api.deps import get_current_user
 from backend.app.services.tutor_service import TutorService
 from backend.app.services.nebius_ai_service import NebiusAIService
 from backend.app.config import settings
+import logging
 
-router = APIRouter(prefix="/v1/tutor", tags=["J.A.R.V.I.S. Voice Tutor"])
+logger = logging.getLogger(__name__)
+
+# Audio upload constraints
+AUDIO_MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_AUDIO_EXTENSIONS = {".webm", ".wav", ".mp3", ".ogg", ".m4a"}
+AUDIO_MEDIA_TYPES = {
+    ".webm": "audio/webm",
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+    ".m4a": "audio/mp4",
+}
+
+router = APIRouter(prefix="/v1/tutor", tags=["KEVIN Voice Tutor"])
+
 
 @router.post("/ask", response_model=TutorAnswerResponse)
 def ask_tutor(
@@ -49,6 +64,7 @@ def ask_tutor(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/voice/ask", response_model=TutorAnswerResponse)
 async def ask_voice_tutor(
     course_id: str = Form(...),
@@ -60,7 +76,7 @@ async def ask_voice_tutor(
 ):
     """
     Accepts speech input: audio file recording from user's microphone,
-    saves the audio to persistent storage, queries course materials with J.A.R.V.I.S.,
+    saves the audio to persistent storage, queries course materials with KEVIN,
     and returns voice synthesis text and metadata.
     """
     course = db.query(Course).filter(Course.id == course_id, Course.user_id == current_user.id).first()
@@ -69,16 +85,24 @@ async def ask_voice_tutor(
 
     user_audio_url = None
     if audio_file:
-        file_ext = os.path.splitext(audio_file.filename)[1] or ".webm"
+        # Validate extension
+        raw_ext = os.path.splitext(audio_file.filename or "")[1].lower() or ".webm"
+        file_ext = raw_ext if raw_ext in ALLOWED_AUDIO_EXTENSIONS else ".webm"
+
+        # Read with size limit
+        contents = await audio_file.read(AUDIO_MAX_BYTES + 1)
+        if len(contents) > AUDIO_MAX_BYTES:
+            raise HTTPException(400, "Audio file exceeds the 10 MB upload limit")
+
         safe_filename = f"user_{uuid.uuid4()}{file_ext}"
-        file_path = os.path.join(settings.AUDIO_DIR, safe_filename)
+        audio_dir = os.path.realpath(settings.AUDIO_DIR)
+        file_path = os.path.join(audio_dir, safe_filename)
         with open(file_path, "wb") as f:
-            while chunk := await audio_file.read(1024 * 512):
-                f.write(chunk)
+            f.write(contents)
         user_audio_url = f"/v1/tutor/voice/audio/{safe_filename}"
 
     # If transcript is provided from browser SpeechRecognition or fallback
-    question_text = transcript.strip() if transcript else "Analyze the current lecture concepts, J.A.R.V.I.S."
+    question_text = transcript.strip() if transcript else "Analyze the current lecture concepts, KEVIN."
 
     response = TutorService.answer_question(
         db=db,
@@ -90,6 +114,7 @@ async def ask_voice_tutor(
     )
     return response
 
+
 @router.post("/voice/messages/{message_id}/audio")
 async def save_assistant_audio(
     message_id: str,
@@ -100,33 +125,77 @@ async def save_assistant_audio(
     """
     Persists the assistant's voice audio output in audio format for historical replay.
     """
-    msg = db.query(AudioMessage).filter(AudioMessage.id == message_id, AudioMessage.user_id == current_user.id).first()
+    msg = db.query(AudioMessage).filter(
+        AudioMessage.id == message_id,
+        AudioMessage.user_id == current_user.id
+    ).first()
     if not msg:
         raise HTTPException(status_code=404, detail="Audio message not found")
 
-    file_ext = os.path.splitext(audio_file.filename)[1] or ".webm"
-    safe_filename = f"jarvis_{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(settings.AUDIO_DIR, safe_filename)
+    # Validate extension
+    raw_ext = os.path.splitext(audio_file.filename or "")[1].lower() or ".webm"
+    file_ext = raw_ext if raw_ext in ALLOWED_AUDIO_EXTENSIONS else ".webm"
+
+    # Read with size limit
+    contents = await audio_file.read(AUDIO_MAX_BYTES + 1)
+    if len(contents) > AUDIO_MAX_BYTES:
+        raise HTTPException(400, "Audio file exceeds the 10 MB upload limit")
+
+    safe_filename = f"kevin_{uuid.uuid4()}{file_ext}"
+    audio_dir = os.path.realpath(settings.AUDIO_DIR)
+    file_path = os.path.join(audio_dir, safe_filename)
 
     with open(file_path, "wb") as f:
-        while chunk := await audio_file.read(1024 * 512):
-            f.write(chunk)
+        f.write(contents)
 
     msg.audio_url = f"/v1/tutor/voice/audio/{safe_filename}"
     db.commit()
     return {"status": "saved", "audio_url": msg.audio_url}
 
+
 @router.get("/voice/audio/{filename}")
-def stream_audio_file(filename: str):
+def stream_audio_file(
+    filename: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
-    Streams saved user or J.A.R.V.I.S. voice audio recordings.
+    Streams saved user or KEVIN voice audio recordings.
+    Requires authentication and verifies that the file belongs to the requesting user
+    via the AudioMessage record. A UUID filename alone is not authorization.
     """
+    # Sanitize: basename only, reject path traversal
     safe_name = os.path.basename(filename)
-    file_path = os.path.join(settings.AUDIO_DIR, safe_name)
+    if not safe_name or safe_name != filename:
+        raise HTTPException(400, "Invalid filename")
+
+    # Verify ownership via AudioMessage record
+    msg = db.query(AudioMessage).filter(
+        AudioMessage.user_id == current_user.id,
+        AudioMessage.audio_url.contains(safe_name),
+    ).first()
+    if not msg:
+        # Either file does not exist or belongs to another user — return 404 to avoid leaking existence
+        raise HTTPException(404, "Audio file not found")
+
+    # Double-check resolved path stays within AUDIO_DIR
+    audio_dir = os.path.realpath(settings.AUDIO_DIR)
+    file_path = os.path.realpath(os.path.join(settings.AUDIO_DIR, safe_name))
+    if not (file_path == audio_dir or file_path.startswith(audio_dir + os.sep)):
+        logger.warning("Path traversal attempt blocked: %s", filename)
+        raise HTTPException(400, "Invalid filename")
+
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Audio file not found")
-    media_type = "audio/webm" if filename.endswith(".webm") else "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
-    return FileResponse(file_path, media_type=media_type)
+        raise HTTPException(404, "Audio file not found")
+
+    ext = os.path.splitext(safe_name)[1].lower()
+    media_type = AUDIO_MEDIA_TYPES.get(ext, "application/octet-stream")
+    return FileResponse(
+        file_path,
+        media_type=media_type,
+        headers={"Cache-Control": "private, no-store"},
+    )
+
 
 @router.get("/voice/conversations", response_model=List[AudioConversationResponse])
 def list_voice_conversations(
@@ -158,6 +227,7 @@ def list_voice_conversations(
         )
     return res
 
+
 @router.get("/voice/conversations/{id}", response_model=AudioConversationResponse)
 def get_voice_conversation(
     id: str,
@@ -167,11 +237,16 @@ def get_voice_conversation(
     """
     Retrieves full audio history for a conversation with audio clips and transcripts.
     """
-    conv = db.query(AudioConversation).filter(AudioConversation.id == id, AudioConversation.user_id == current_user.id).first()
+    conv = db.query(AudioConversation).filter(
+        AudioConversation.id == id,
+        AudioConversation.user_id == current_user.id
+    ).first()
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    db_msgs = db.query(AudioMessage).filter(AudioMessage.conversation_id == conv.id).order_by(AudioMessage.created_at.asc()).all()
+    db_msgs = db.query(AudioMessage).filter(
+        AudioMessage.conversation_id == conv.id
+    ).order_by(AudioMessage.created_at.asc()).all()
 
     messages = []
     for m in db_msgs:
@@ -206,11 +281,12 @@ def get_voice_conversation(
         messages=messages,
     )
 
+
 @router.get("/models")
 def get_available_models(current_user: User = Depends(get_current_user)):
     models = NebiusAIService.list_available_models()
     return {
         "is_configured": NebiusAIService.is_configured(),
-        "active_model": NebiusAIService.list_available_models()[0],
+        "active_model": models[0] if models else settings.NEBIUS_MODEL_ID,
         "available_models": models,
     }

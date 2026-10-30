@@ -255,6 +255,31 @@ export interface ToolGrant {
   description?: string;
 }
 
+
+export interface UserPreferences {
+  id?: string;
+  user_id?: string;
+  learning_goals?: string;
+  available_hours_per_week?: number;
+  preferred_session_duration_minutes?: number;
+  timezone?: string;
+  onboarding_completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface StudySessionRecord {
+  id: string;
+  user_id: string;
+  course_id?: string;
+  started_at: string;
+  ended_at?: string;
+  duration_seconds?: number;
+  session_type: string;
+  notes?: string;
+  created_at: string;
+}
+
 // Token management
 const TOKEN_KEY = "learnloop_access_token";
 
@@ -431,7 +456,7 @@ export const api = {
       apiFetch<AudioConversation>(`/v1/tutor/voice/conversations/${id}`),
     saveAssistantAudio: async (messageId: string, audioBlob: Blob) => {
       const formData = new FormData();
-      formData.append("audio_file", audioBlob, "jarvis_response.webm");
+      formData.append("audio_file", audioBlob, "kevin_response.webm");
       return apiFetch<{ status: string; audio_url: string }>(
         `/v1/tutor/voice/messages/${messageId}/audio`,
         {
@@ -461,6 +486,7 @@ export const api = {
       }),
     submit: (data: {
       course_id: string;
+      idempotency_key?: string;
       answers: Array<{ quiz_item_id: string; selected_answer: string }>;
     }) =>
       apiFetch<QuizResultResponse>("/v1/quizzes/submit", {
@@ -552,13 +578,42 @@ export const api = {
       apiFetch<{ message: string }>("/v1/settings/data", { method: "DELETE" }),
   },
 
+  preferences: {
+    get: () => apiFetch<UserPreferences>("/v1/preferences"),
+    upsert: (data: Partial<UserPreferences>) =>
+      apiFetch<UserPreferences>("/v1/preferences", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
+
+  studySessions: {
+    start: (data: { course_id?: string; session_type?: string }) =>
+      apiFetch<StudySessionRecord>("/v1/study-sessions/start", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    end: (id: string, duration_seconds?: number) =>
+      apiFetch<StudySessionRecord>(`/v1/study-sessions/${id}/end`, {
+        method: "POST",
+        body: JSON.stringify({ duration_seconds }),
+      }),
+    list: (course_id?: string) =>
+      apiFetch<StudySessionRecord[]>(
+        `/v1/study-sessions${course_id ? `?course_id=${course_id}` : ""}`,
+      ),
+  },
+
   health: () =>
     apiFetch<{
       status: string;
       app: string;
       version: string;
       database_connected: boolean;
-      nebius_configured: boolean;
+      /** Key is configured — does NOT confirm the model is reachable. */
+      nebius_key_present: boolean;
+      embedding_provider: string;
+      embedding_model: string;
       model: string;
     }>("/health"),
 };

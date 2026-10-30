@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class MisconceptionResponse(BaseModel):
     id: str
@@ -23,8 +23,7 @@ class MisconceptionResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MasteryResponse(BaseModel):
     id: str
@@ -39,8 +38,7 @@ class MasteryResponse(BaseModel):
     last_assessed_at: Optional[datetime] = None
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MemorySummaryResponse(BaseModel):
     total_topics: int

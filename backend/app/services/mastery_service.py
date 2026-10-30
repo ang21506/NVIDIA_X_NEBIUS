@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict
 from sqlalchemy.orm import Session
 from backend.app.models.topic import MasteryState, Topic
@@ -63,8 +63,8 @@ class MasteryService:
 
         mastery.mastery_score = round(new_score, 4)
         mastery.confidence_score = round(min(1.0, mastery.evidence_count / 5.0), 3)
-        mastery.last_assessed_at = datetime.utcnow()
-        mastery.updated_at = datetime.utcnow()
+        mastery.last_assessed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        mastery.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
         db.flush()
         return mastery

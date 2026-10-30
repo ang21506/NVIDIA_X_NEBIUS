@@ -2,7 +2,7 @@ import json
 import hashlib
 from fastapi import HTTPException
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from backend.app.models.assessment import QuizItem, QuizAttempt, QuizAnswer
@@ -83,7 +83,7 @@ class QuizService:
             total_items=total_items,
             correct_items=0,
             score_percentage=0.0,
-            submitted_at=datetime.utcnow(),
+            submitted_at=datetime.now(timezone.utc).replace(tzinfo=None),
             idempotency_key=payload.idempotency_key,
             request_hash=fingerprint,
         )

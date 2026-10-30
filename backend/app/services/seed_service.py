@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from backend.app.models.user import User
 from backend.app.models.course import Course
@@ -142,7 +142,7 @@ class SeedService:
                     evidence_count=2,
                     correct_count=1,
                     total_count=2,
-                    last_assessed_at=datetime.utcnow() - timedelta(days=2),
+                    last_assessed_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=2),
                 )
                 db.add(mastery)
 

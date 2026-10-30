@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from typing import Dict, Any, Optional
@@ -52,7 +52,7 @@ class AgentOrchestrator:
         tool_actions = []
 
         def log_step(state: str, message: str):
-            logs.append(f"[{datetime.utcnow().isoformat()}] [{state}] {message}")
+            logs.append(f"[{datetime.now(timezone.utc).replace(tzinfo=None).isoformat()}] [{state}] {message}")
 
         # Create Agent Run in REQUESTED state
         agent_run = AgentRun(
@@ -63,7 +63,7 @@ class AgentOrchestrator:
             execution_state="REQUESTED",
             logs=json.dumps(logs),
             tool_actions=json.dumps(tool_actions),
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
         db.add(agent_run)
         db.flush()
@@ -74,7 +74,7 @@ class AgentOrchestrator:
         if skill_name not in cls.APPROVED_SKILLS:
             agent_run.execution_state = "FAILED"
             agent_run.error_message = f"Skill '{skill_name}' is not in the approved skill registry."
-            agent_run.completed_at = datetime.utcnow()
+            agent_run.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
             agent_run.logs = json.dumps(logs)
             db.commit()
             return agent_run
@@ -83,7 +83,7 @@ class AgentOrchestrator:
         if not cls.check_tool_permission(db, user.id, skill_name):
             agent_run.execution_state = "FAILED"
             agent_run.error_message = f"Permission denied: Skill '{skill_name}' was revoked by user in privacy settings."
-            agent_run.completed_at = datetime.utcnow()
+            agent_run.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
             log_step("AUTHORIZED", f"Permission denied for skill '{skill_name}'.")
             agent_run.logs = json.dumps(logs)
             db.commit()
@@ -162,7 +162,7 @@ class AgentOrchestrator:
                 if task:
                     task.status = "COMPLETED"
                     task.completion_evidence = evidence
-                    task.completed_at = datetime.utcnow()
+                    task.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
                     tool_actions.append({"tool": "confirm_task", "task_id": task_id, "evidence": evidence})
                     result_summary = f"Verified completion of task '{task.title}' with evidence."
                 else:
@@ -181,14 +181,14 @@ class AgentOrchestrator:
             # Completed
             agent_run.execution_state = "COMPLETED"
             agent_run.result_summary = result_summary
-            agent_run.completed_at = datetime.utcnow()
+            agent_run.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
             log_step("COMPLETED", f"Agent run completed successfully in state COMPLETED.")
 
         except Exception as e:
             logger.exception(f"Agent run failed: {e}")
             agent_run.execution_state = "FAILED"
             agent_run.error_message = str(e)
-            agent_run.completed_at = datetime.utcnow()
+            agent_run.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
             log_step("FAILED", f"Error during execution: {str(e)}")
 
         agent_run.logs = json.dumps(logs)

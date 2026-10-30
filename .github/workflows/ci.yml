@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Backend tests ────────────────────────────────────────────────────────────
+  backend-tests:
+    name: Backend — Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run backend tests (SQLite, no live providers)
+        env:
+          DATABASE_URL: "sqlite:///./backend/data/test_ci.db"
+          MIGRATION_DATABASE_URL: "sqlite:///./backend/data/test_ci.db"
+          APP_ENV: "test"
+          AUTO_CREATE_TABLES: "true"
+          SEED_DEMO_DATA: "false"
+          ENABLE_DEMO_MODE: "true"
+          JWT_SECRET: "ci-test-secret-not-for-production-use-only"
+          EMBEDDING_PROVIDER: "local"
+          EMBEDDING_MODEL_ID: "hash-v1"
+          EMAIL_PROVIDER: "log"
+        run: |
+          python -m pytest backend/tests \
+            --ignore=backend/tests/test_postgres_live.py \
+            -v --tb=short
+
+  # ── Migration render check ───────────────────────────────────────────────────
+  migration-check:
+    name: Migrations — dependency order
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Verify migrations apply cleanly on SQLite
+        env:
+          DATABASE_URL: "sqlite:///./backend/data/ci_migration_check.db"
+          MIGRATION_DATABASE_URL: "sqlite:///./backend/data/ci_migration_check.db"
+          APP_ENV: "test"
+          AUTO_CREATE_TABLES: "false"
+          SEED_DEMO_DATA: "false"
+          ENABLE_DEMO_MODE: "false"
+          JWT_SECRET: "ci-test-secret-not-for-production-use-only"
+          EMBEDDING_PROVIDER: "local"
+          EMBEDDING_MODEL_ID: "hash-v1"
+        run: |
+          python -m alembic upgrade head
+          python -m alembic check
+
+  # ── Frontend build + type-check + tests ─────────────────────────────────────
+  frontend-build:
+    name: Frontend — build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript type-check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Build
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ""
+        run: npm run build
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm test -- --run
+

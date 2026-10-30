@@ -22,12 +22,18 @@ from backend.app.api.memory_routes import router as memory_router
 from backend.app.api.study_plan_routes import router as study_plan_router
 from backend.app.api.agent_routes import router as agent_router
 from backend.app.api.settings_routes import router as settings_router
+from backend.app.api.preferences_routes import router as preferences_router
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("learnloop")
+
+# NOTE: Rate limiting is NOT implemented in this version.
+# In-memory rate limiting does NOT work across multiple application workers.
+# For production with multiple instances, add Redis-backed rate limiting
+# (e.g., slowapi + Redis) before public deployment.
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,7 +62,7 @@ async def lifespan(app: FastAPI):
             current = MigrationContext.configure(connection).get_current_revision()
         if current != ScriptDirectory.from_config(config).get_current_head():
             raise RuntimeError("Database schema is out of date. Run python -m alembic upgrade head")
-    
+
     # Auto-seed demo student and ML course
     try:
         from backend.app.database import SessionLocal
@@ -70,6 +76,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     logger.info("LearnLoop AI backend shutting down.")
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -98,15 +105,27 @@ app.include_router(memory_router)
 app.include_router(study_plan_router)
 app.include_router(agent_router)
 app.include_router(settings_router)
+app.include_router(preferences_router)
+
 
 @app.get("/health", tags=["Health"])
 @app.get("/v1/health", tags=["Health"])
 def health_check(db: Session = Depends(get_db)):
+    """
+    Liveness and readiness check.
+
+    - database_connected: actual DB query result
+    - nebius_key_present: API key is configured (does NOT confirm the model is reachable)
+    - embedding_provider / embedding_model: configured values only
+
+    No credentials, connection strings, or internal exceptions are exposed.
+    """
     db_ok = True
     try:
         db.execute(text("SELECT 1"))
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
+    except Exception:
+        # Log internally but do not expose the exception to the caller
+        logger.error("Database health check failed", exc_info=False)
         db_ok = False
 
     return {
@@ -114,6 +133,10 @@ def health_check(db: Session = Depends(get_db)):
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "database_connected": db_ok,
-        "nebius_configured": NebiusAIService.is_configured(),
+        # Key presence ≠ successful AI connection. A live model availability
+        # check is intentionally not performed here to avoid latency/cost.
+        "nebius_key_present": NebiusAIService.is_configured(),
+        "embedding_provider": settings.EMBEDDING_PROVIDER,
+        "embedding_model": settings.EMBEDDING_MODEL_ID,
         "model": settings.NEBIUS_MODEL_ID,
     }

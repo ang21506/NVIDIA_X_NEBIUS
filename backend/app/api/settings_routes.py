@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -71,7 +71,7 @@ def export_user_data(
             "user_id": current_user.id,
             "email": current_user.email,
             "full_name": current_user.full_name,
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             "version": "1.0",
         },
         "courses": [{"id": c.id, "title": c.title, "code": c.code, "exam_date": str(c.exam_date)} for c in courses],

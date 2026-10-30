@@ -8,6 +8,7 @@ from backend.app.models.course import Course
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/auth/login", auto_error=False)
 
+
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
@@ -23,16 +24,23 @@ def get_current_user(
     payload = decode_access_token(token)
     if payload is None:
         raise credentials_exception
-    
+
     user_id: str = payload.get("sub")
     if user_id is None:
         raise credentials_exception
-        
+
     user = db.query(User).filter(User.id == user_id).first()
     if user is None or not user.is_active:
         raise credentials_exception
-        
+
+    # Token-version check: invalidates tokens issued before logout-all or password change.
+    # Old tokens without "ver" field are accepted during transition (backward compat).
+    token_ver = payload.get("ver")
+    if token_ver is not None and token_ver != user.token_version:
+        raise credentials_exception
+
     return user
+
 
 def get_current_user_course(
     id: str,

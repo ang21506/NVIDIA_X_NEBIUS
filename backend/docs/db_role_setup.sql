@@ -1,0 +1,116 @@
+-- =============================================================================
+-- LearnLoop AI — Least-Privilege Application Database Role
+-- =============================================================================
+-- PURPOSE: Replace the privileged 'postgres' runtime user with a restricted
+--          role that has only the permissions the application actually needs.
+--
+-- STATUS:  REVIEW ONLY — do NOT execute this against Supabase without explicit
+--          DBA / project-owner approval. Apply in a migration window.
+--
+-- APPLY:   psql $DATABASE_URL -f backend/docs/db_role_setup.sql
+--          (using a superuser or role-admin connection, NOT the app role)
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Create the application role (non-login; granted to a login role below)
+-- -----------------------------------------------------------------------------
+-- CREATE ROLE learnloop_app NOLOGIN NOINHERIT;
+
+-- Create a login role the app uses at runtime.
+-- Set a strong random password; store it only in the production .env file.
+-- CREATE ROLE learnloop_runtime LOGIN PASSWORD 'REPLACE_WITH_STRONG_RANDOM_PASSWORD'
+--     IN ROLE learnloop_app;
+
+-- -----------------------------------------------------------------------------
+-- 2. Connect privilege on the database
+-- -----------------------------------------------------------------------------
+-- GRANT CONNECT ON DATABASE <your_db_name> TO learnloop_app;
+
+-- -----------------------------------------------------------------------------
+-- 3. Usage on the public schema
+-- -----------------------------------------------------------------------------
+-- GRANT USAGE ON SCHEMA public TO learnloop_app;
+
+-- -----------------------------------------------------------------------------
+-- 4. Table-level DML permissions
+-- Adjust the table list if new tables are added via migrations.
+-- -----------------------------------------------------------------------------
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+--     public.users,
+--     public.courses,
+--     public.topics,
+--     public.resources,
+--     public.chunks,
+--     public.audio_conversations,
+--     public.audio_messages,
+--     public.quiz_items,
+--     public.quiz_attempts,
+--     public.quiz_attempt_answers,
+--     public.mastery,
+--     public.misconceptions,
+--     public.study_tasks,
+--     public.agent_runs,
+--     public.tool_grants,
+--     public.auth_tokens,
+--     public.user_preferences,
+--     public.study_sessions,
+--     public.processing_jobs
+--   TO learnloop_app;
+
+-- -----------------------------------------------------------------------------
+-- 5. Sequence permissions (needed for auto-increment / serial columns)
+-- -----------------------------------------------------------------------------
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO learnloop_app;
+
+-- Grant on future sequences too:
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public
+--     GRANT USAGE, SELECT ON SEQUENCES TO learnloop_app;
+
+-- -----------------------------------------------------------------------------
+-- 6. Alembic migration role (separate — keep DDL rights out of runtime)
+-- -----------------------------------------------------------------------------
+-- CREATE ROLE learnloop_migrator LOGIN PASSWORD 'REPLACE_WITH_MIGRATION_PASSWORD'
+--     CREATEROLE;
+-- GRANT learnloop_app TO learnloop_migrator;          -- inherits app permissions
+-- GRANT CREATE ON SCHEMA public TO learnloop_migrator; -- DDL for migrations
+
+-- Use DATABASE_URL (learnloop_runtime) in application workers.
+-- Use MIGRATION_DATABASE_URL (learnloop_migrator) only in Alembic.
+
+-- -----------------------------------------------------------------------------
+-- 7. Supabase Data API (PostgREST) exposure — IMPORTANT
+-- -----------------------------------------------------------------------------
+-- Tables in the public schema are accessible via the Supabase REST API
+-- (https://<project>.supabase.co/rest/v1/<table>) using the anon or
+-- service_role keys by default.
+--
+-- LearnLoop uses CUSTOM FastAPI JWTs — Supabase Auth is NOT in use.
+-- This means:
+--   • auth.uid() is always NULL for requests from the LearnLoop backend.
+--   • Row-Level Security (RLS) policies that rely on auth.uid() will not
+--     protect rows accessed through PostgREST.
+--   • If RLS is OFF (the default), any anon request can read all rows.
+--
+-- RECOMMENDED ACTIONS (require DBA approval):
+--   a) Enable RLS on every application table:
+--      ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+--      ... (repeat for all tables)
+--
+--   b) Add a default-deny policy so unauthenticated PostgREST access is blocked:
+--      CREATE POLICY deny_all ON public.users AS RESTRICTIVE
+--          USING (false);
+--      ... (repeat for all tables)
+--
+--   c) Revoke direct PostgREST access for the anon role:
+--      REVOKE SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public
+--          FROM anon;
+--
+--   d) Alternatively, move application tables to a private schema that
+--      PostgREST does not expose (requires Supabase project reconfiguration).
+--
+-- NOTE: The LearnLoop FastAPI backend enforces ownership at the query level
+-- (every query filters by user_id from the authenticated JWT). This is correct
+-- but is a defense-in-depth measure, NOT a substitute for database-level access
+-- controls. Do not rely on frontend filtering for ownership enforcement.
+-- =============================================================================
+

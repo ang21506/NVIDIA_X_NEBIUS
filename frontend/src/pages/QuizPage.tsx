@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 import { api, type QuizItem, type QuizResultResponse } from "../api/client";
@@ -13,9 +13,15 @@ export function QuizPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [round, setRound] = useState(0);
+  // Idempotency: generate one key per quiz session, reuse on retries
+  const idempotencyKey = useRef<string>(crypto.randomUUID());
+  const submitted = useRef(false);
   useEffect(() => {
     let alive = true;
     if (!activeCourseId) return;
+    // Generate a fresh idempotency key for each new quiz session
+    idempotencyKey.current = crypto.randomUUID();
+    submitted.current = false;
     api.quizzes
       .generate({ course_id: activeCourseId, num_questions: 5 })
       .then((q) => {
@@ -35,24 +41,28 @@ export function QuizPage() {
     };
   }, [activeCourseId, round]);
   const submit = async () => {
-    if (!activeCourseId || busy) return;
+    // Prevent double-submission: busy check and submitted guard
+    if (!activeCourseId || busy || submitted.current) return;
     setBusy(true);
     setError("");
     try {
-      setResult(
-        await api.quizzes.submit({
-          course_id: activeCourseId,
-          answers: items.map((q) => ({
-            quiz_item_id: q.id,
-            selected_answer: answers[q.id],
-          })),
-        }),
-      );
+      const submissionResult = await api.quizzes.submit({
+        course_id: activeCourseId,
+        idempotency_key: idempotencyKey.current,
+        answers: items.map((q) => ({
+          quiz_item_id: q.id,
+          selected_answer: answers[q.id],
+        })),
+      });
+      submitted.current = true;
+      setResult(submissionResult);
     } catch (e) {
+      // On network error, allow retry with same idempotency key
+      // The key is reused intentionally so the backend deduplicates retries
       setError(
         e instanceof Error
           ? e.message
-          : "Could not submit. Your answers are still here.",
+          : "Could not submit. Your answers are still here — try again.",
       );
     } finally {
       setBusy(false);

@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class CourseBase(BaseModel):
     title: str = Field(..., min_length=2, max_length=255)
@@ -31,8 +31,7 @@ class TopicResponse(BaseModel):
     mastery_score: Optional[float] = 0.2
     prerequisites: List[str] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CourseResponse(CourseBase):
     id: str
@@ -43,8 +42,7 @@ class CourseResponse(CourseBase):
     resource_count: int = 0
     overall_mastery: float = 0.0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CourseDetailResponse(CourseResponse):
     topics: List[TopicResponse] = []

@@ -9,6 +9,9 @@ from backend.app.models.planner import StudyTask
 from backend.app.models.agent import AgentRun, ToolGrant
 from backend.app.models.audio_chat import AudioConversation, AudioMessage
 from backend.app.models.learning_event import MasteryEvent
+from backend.app.models.auth_token import AuthToken
+from backend.app.models.user_preferences import UserPreferences, StudySession
+from backend.app.models.processing_job import ProcessingJob
 from backend.app.models import integrity
 
 __all__ = [
@@ -29,4 +32,9 @@ __all__ = [
     "ToolGrant",
     "AudioConversation",
     "AudioMessage",
+    "MasteryEvent",
+    "AuthToken",
+    "UserPreferences",
+    "StudySession",
+    "ProcessingJob",
 ]

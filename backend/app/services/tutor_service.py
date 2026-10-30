@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from backend.app.services.document_service import DocumentService
@@ -34,7 +34,6 @@ RESPONSE FORMAT (Strict JSON):
   "uncertainty_notes": null
 }
 """
-JARVIS_SYSTEM_PROMPT = KEVIN_SYSTEM_PROMPT
 
 class TutorService:
     @classmethod
@@ -54,7 +53,7 @@ class TutorService:
         conv = AudioConversation(
             user_id=user_id,
             course_id=course_id,
-            title=title or f"J.A.R.V.I.S. Voice Session ({datetime.utcnow().strftime('%b %d, %H:%M')})"
+            title=title or f"KEVIN Voice Session ({datetime.now(timezone.utc).replace(tzinfo=None).strftime('%b %d, %H:%M')})"
         )
         db.add(conv)
         db.commit()
@@ -121,7 +120,7 @@ class TutorService:
                 "I recommend uploading lecture notes in the Resource Library so I may ground our analysis."
             )
             fallback_answer = (
-                "**J.A.R.V.I.S. Notice:**\n\n"
+                "**KEVIN Notice:**\n\n"
                 "My diagnostic scans indicate your course library does not yet contain documentation for this inquiry, Sir. "
                 "Please upload lecture notes or slides in the Resource Library so I can provide verified, evidence-backed counsel."
             )
@@ -141,13 +140,13 @@ class TutorService:
             return TutorAnswerResponse(
                 answer=fallback_answer,
                 speech_text=fallback_speech,
-                key_takeaways=["Upload course resources to activate J.A.R.V.I.S. evidence grounding."],
+                key_takeaways=["Upload course resources to activate KEVIN evidence grounding."],
                 examples=[],
                 citations=[],
                 has_sufficient_evidence=False,
                 uncertainty_notes="No documents indexed for this topic in the course library.",
                 follow_up_questions=["Shall we upload lecture notes now, Sir?"],
-                model_used="J.A.R.V.I.S. Security Protocol",
+                model_used="KEVIN Standby Mode",
                 latency_ms=1.0,
                 conversation_id=conv.id,
                 message_id=assistant_msg.id,

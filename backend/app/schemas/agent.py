@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class AgentRunRequest(BaseModel):
     goal: str
@@ -22,8 +22,7 @@ class AgentRunResponse(BaseModel):
     started_at: datetime
     completed_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ToolGrantResponse(BaseModel):
     id: str
@@ -32,8 +31,7 @@ class ToolGrantResponse(BaseModel):
     revoked_at: Optional[datetime] = None
     description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ToolGrantToggle(BaseModel):
     tool_name: str

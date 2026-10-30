@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -164,13 +164,13 @@ def toggle_tool_grant(
             user_id=current_user.id,
             tool_name=payload.tool_name,
             is_granted=payload.is_granted,
-            revoked_at=None if payload.is_granted else datetime.utcnow(),
+            revoked_at=None if payload.is_granted else datetime.now(timezone.utc).replace(tzinfo=None),
         )
         db.add(grant)
     else:
         grant.is_granted = payload.is_granted
-        grant.revoked_at = None if payload.is_granted else datetime.utcnow()
-        grant.updated_at = datetime.utcnow()
+        grant.revoked_at = None if payload.is_granted else datetime.now(timezone.utc).replace(tzinfo=None)
+        grant.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     db.commit()
     db.refresh(grant)

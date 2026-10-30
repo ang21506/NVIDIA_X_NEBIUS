@@ -2,6 +2,7 @@ import os
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -32,7 +33,9 @@ class Settings(BaseSettings):
         "meta-llama/Meta-Llama-3.1-8B-Instruct"
     ]
 
-    # Authentication
+    # Authentication & Security
+    # Generate with: python -m backend.generate_jwt_secret
+    # WARNING: Changing JWT_SECRET invalidates ALL existing user sessions.
     JWT_SECRET: str = os.getenv("JWT_SECRET", "learnloop-super-secret-production-dev-key-2026")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
@@ -53,6 +56,17 @@ class Settings(BaseSettings):
     EMBEDDING_API_KEY: str = ""
     EMBEDDING_BASE_URL: str = "https://api.tokenfactory.nebius.com/v1/"
 
+    # Email provider (for verification/reset flows)
+    # 'log'  (default): prints to console — safe for dev/test, never return token in API responses
+    # 'smtp': send via SMTP; configure SMTP_* fields below
+    EMAIL_PROVIDER: str = "log"
+    EMAIL_FROM: str = "noreply@learnloop.ai"
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_TLS: str = "true"
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+
     # Agent limits
     AGENT_MAX_TOOL_CALLS: int = 8
     AGENT_TIMEOUT_SECONDS: int = 30
@@ -71,6 +85,7 @@ class Settings(BaseSettings):
         "http://localhost:4173",
         "http://127.0.0.1:4173",
     ]
+
 
 settings = Settings()
 

@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta, timezone
 import json
 from typing import List, Dict
 from sqlalchemy.orm import Session
@@ -42,7 +42,7 @@ class PlannerService:
 
         # 3. Forgetting Risk (0 to 1)
         if mastery_record and mastery_record.last_assessed_at:
-            days_since = (datetime.utcnow() - mastery_record.last_assessed_at).days
+            days_since = (datetime.now(timezone.utc).replace(tzinfo=None) - mastery_record.last_assessed_at).days
             forgetting_risk = min(1.0, max(0.1, round(days_since / 14.0, 3)))
         else:
             forgetting_risk = 0.75  # High risk if unassessed
@@ -159,7 +159,7 @@ class PlannerService:
                     task.reason_codes = json.dumps(metrics["reasons"])
                     task.due_date = target_due
                     task.description = task_desc
-                    task.updated_at = datetime.utcnow()
+                    task.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 updated_tasks.append(task)
             else:
                 new_task = StudyTask(

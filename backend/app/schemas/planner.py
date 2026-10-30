@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class StudyTaskResponse(BaseModel):
     id: str
@@ -20,8 +20,7 @@ class StudyTaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StudyTaskUpdate(BaseModel):
     status: Optional[str] = None
